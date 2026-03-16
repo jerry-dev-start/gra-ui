@@ -1,66 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout as AntLayout, Menu, theme } from 'antd'
-import {
-  DashboardOutlined,
-  SettingOutlined,
-  UserOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LogoutOutlined,
-  MenuOutlined,
-} from '@ant-design/icons'
+import { Breadcrumb, Layout as AntLayout, Menu, theme } from 'antd'
+import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
+import type { MenuRecord } from '@/types/menu'
 import { removeToken } from '../utils/auth'
 import { useUserStore } from '@/stores/user'
+import { useMenuStore } from '@/stores/menu'
 import './index.css'
 
 const { Sider, Header, Content } = AntLayout
 
 type AntMenuItem = Required<MenuProps>['items'][number]
-
-const menuItems: AntMenuItem[] = [
-  {
-    key: '/dashboard',
-    icon: <DashboardOutlined />,
-    label: '仪表盘',
-  },
-  {
-    key: '/system',
-    icon: <SettingOutlined />,
-    label: '系统管理',
-    children: [
-      {
-        key: '/users',
-        icon: <UserOutlined />,
-        label: '用户管理',
-      },
-      {
-        key: '/menus',
-        icon: <MenuOutlined />,
-        label: '菜单管理',
-      },
-      {
-        key: '/settings',
-        icon: <SettingOutlined />,
-        label: '系统设置',
-      },
-    ],
-  },
-]
-
-/** 根据路径查找菜单标签 */
-function findLabel(items: AntMenuItem[], pathname: string): string {
-  for (const item of items ?? []) {
-    if (!item || !('key' in item)) continue
-    if (item.key === pathname) return (item as { label?: string }).label ?? ''
-    if ('children' in item && item.children) {
-      const found = findLabel(item.children as AntMenuItem[], pathname)
-      if (found) return found
-    }
-  }
-  return '首页'
-}
 
 /** 根据路径查找父级 key（用于自动展开子菜单） */
 function findOpenKey(items: AntMenuItem[], pathname: string): string | undefined {
@@ -77,28 +28,69 @@ function findOpenKey(items: AntMenuItem[], pathname: string): string | undefined
   return undefined
 }
 
+/**
+ * 从原始菜单树中递归查找当前路径对应的面包屑链
+ * 返回 [{ name, path }, ...] 从根到叶
+ */
+function findBreadcrumbTrail(
+  menus: MenuRecord[],
+  pathname: string,
+): { name: string; path?: string }[] {
+  for (const menu of menus) {
+    if (menu.type === 'button' || menu.status === 0) continue
+
+    // 叶子命中
+    if (menu.type === 'menu' && menu.path === pathname) {
+      return [{ name: menu.name, path: menu.path }]
+    }
+
+    // 目录：递归子节点
+    if (menu.type === 'directory' && menu.children?.length) {
+      const trail = findBreadcrumbTrail(menu.children, pathname)
+      if (trail.length) {
+        return [{ name: menu.name }, ...trail]
+      }
+    }
+  }
+  return []
+}
+
 function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { token: themeToken } = theme.useToken()
 
-  const defaultOpenKey = findOpenKey(menuItems, location.pathname)
+  const { user, clearUser } = useUserStore()
+  const { menus, antdMenuItems, clearMenus } = useMenuStore()
 
-  const { user, fetchUser, clearUser } = useUserStore()
+  const defaultOpenKey = findOpenKey(antdMenuItems, location.pathname)
+
+  // 面包屑：首页 / 父目录 / 当前页
+  const breadcrumbItems = useMemo(() => {
+    const trail = findBreadcrumbTrail(menus, location.pathname)
+    const items: { title: React.ReactNode; href?: string }[] = [
+      { title: <HomeOutlined />, href: '/' },
+    ]
+    trail.forEach((item, idx) => {
+      const isLast = idx === trail.length - 1
+      items.push({
+        title: item.name,
+        ...(isLast || !item.path ? {} : { href: item.path }),
+      })
+    })
+    return items
+  }, [menus, location.pathname])
 
   const handleLogout = () => {
     clearUser()
+    clearMenus()
     removeToken()
     navigate('/login', { replace: true })
   }
 
-  useEffect(() => {
-    fetchUser()
-  }, [])
-
   return (
-    <AntLayout style={{ minHeight: '100vh' }}>
+    <AntLayout style={{ height: '100vh', overflow: 'hidden' }}>
       <Sider
         collapsible
         collapsed={collapsed}
@@ -109,6 +101,7 @@ function Layout() {
           background: themeToken.colorBgContainer,
           borderRight: `1px solid ${themeToken.colorBorderSecondary}`,
           overflow: 'hidden',
+          height: '100vh',
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -125,7 +118,7 @@ function Layout() {
             mode="inline"
             selectedKeys={[location.pathname]}
             defaultOpenKeys={defaultOpenKey ? [defaultOpenKey] : []}
-            items={menuItems}
+            items={antdMenuItems}
             onClick={({ key }) => navigate(key)}
             style={{ borderInlineEnd: 'none', flex: 1, overflow: 'auto' }}
           />
@@ -161,7 +154,7 @@ function Layout() {
         </div>
       </Sider>
 
-      <AntLayout>
+      <AntLayout style={{ overflow: 'hidden' }}>
         <Header
           style={{
             padding: '0 24px',
@@ -170,16 +163,17 @@ function Layout() {
             display: 'flex',
             alignItems: 'center',
             gap: 16,
+            flexShrink: 0,
           }}
         >
           {collapsed
             ? <MenuUnfoldOutlined onClick={() => setCollapsed(false)} style={{ fontSize: 18, cursor: 'pointer' }} />
             : <MenuFoldOutlined onClick={() => setCollapsed(true)} style={{ fontSize: 18, cursor: 'pointer' }} />
           }
-          <span>{findLabel(menuItems, location.pathname)}</span>
+          <Breadcrumb items={breadcrumbItems} />
         </Header>
 
-        <Content style={{ padding: 24 }}>
+        <Content style={{ padding: 24, overflow: 'auto', flex: 1 }}>
           <Outlet />
         </Content>
       </AntLayout>

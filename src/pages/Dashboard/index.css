@@ -1,0 +1,76 @@
+/* ========================================
+   Dashboard — 赛博暗色风格
+   ======================================== */
+
+.dashboard {
+  width: 100%;
+}
+
+/* ── 统计卡片 ── */
+.stat-card {
+  border-radius: 12px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 194, 255, 0.12);
+}
+.stat-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* ── 图表卡片 ── */
+.chart-card {
+  border-radius: 12px;
+  height: 100%;
+}
+.chart-card .ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.chart-card .ant-card-head-title {
+  font-weight: 600;
+}
+
+/* ── 活动日志 ── */
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+.activity-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.activity-time {
+  font-size: 12px;
+  opacity: 0.45;
+  margin-top: 2px;
+}

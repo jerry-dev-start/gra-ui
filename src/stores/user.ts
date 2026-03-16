@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { User } from '@/types/user'
 import { getUserInfo } from '@/api/auth'
+import { removeToken } from '@/utils/auth'
 
 interface UserState {
   user: User | null
@@ -20,6 +21,8 @@ export const useUserStore = create<UserState>((set) => ({
       const data = await getUserInfo()
       set({ user: data.userInfo, loading: false })
     } catch {
+      // 拉取失败（token 过期/无效），清 token 让 App 层跳登录
+      removeToken()
       set({ user: null, loading: false })
     }
   },

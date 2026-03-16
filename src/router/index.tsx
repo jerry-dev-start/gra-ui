@@ -1,48 +1,51 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import type { RouteObject } from 'react-router-dom'
 import Layout from '../layouts'
 import Login from '../pages/Login'
-import MenuPage from '../pages/Menu'
-import { RequireAuth, GuestOnly } from '../components/AuthGuard'
+import { GuestOnly } from '../components/AuthGuard'
 
-const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: (
-      <GuestOnly>
-        <Login />
-      </GuestOnly>
-    ),
-  },
-  {
-    path: '/',
-    element: (
-      <RequireAuth>
-        <Layout />
-      </RequireAuth>
-    ),
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
-        path: 'dashboard',
-        element: <div style={{ color: '#c8cdd8' }}>Dashboard 页面 — 待开发</div>,
-      },
-      {
-        path: 'users',
-        element: <div style={{ color: '#c8cdd8' }}>用户管理 — 待开发</div>,
-      },
-      {
-        path: 'settings',
-        element: <div style={{ color: '#c8cdd8' }}>系统设置 — 待开发</div>,
-      },
-      {
-        path: 'menus',
-        element: <MenuPage />,
-      },
-    ],
-  },
-])
+const loginRoute: RouteObject = {
+  path: '/login',
+  element: (
+    <GuestOnly>
+      <Login />
+    </GuestOnly>
+  ),
+}
 
-export default router
+/** 未登录时的静态路由：仅 /login，其余全部跳转 /login */
+export function createStaticRouter() {
+  return createBrowserRouter([
+    loginRoute,
+    {
+      path: '*',
+      element: <Navigate to="/login" replace />,
+    },
+  ])
+}
+
+/** 登录后的动态路由：Layout 包裹动态子路由 + /login */
+export function createDynamicRouter(dynamicRoutes: RouteObject[]) {
+  return createBrowserRouter([
+    loginRoute,
+    {
+      path: '/',
+      element: <Layout />,
+      children: [
+        {
+          index: true,
+          element: <Navigate to={dynamicRoutes[0]?.path ? `/${dynamicRoutes[0].path}` : '/login'} replace />,
+        },
+        ...dynamicRoutes,
+        {
+          path: '*',
+          element: (
+            <div style={{ color: '#c8cdd8', textAlign: 'center', paddingTop: 100 }}>
+              404 — 页面不存在
+            </div>
+          ),
+        },
+      ],
+    },
+  ])
+}
