@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { setToken } from '../../utils/auth'
+import { login } from '../../api/auth'
 import './index.css'
 
 function Login() {
@@ -28,12 +29,17 @@ function Login() {
     }
 
     setLoading(true)
-    // TODO: 替换为真实后端 API 调用
-    setTimeout(() => {
-      setToken('mock_token_' + Date.now())
-      setLoading(false)
-      navigate(from, { replace: true })
-    }, 1000)
+    login({ username, password })
+      .then((data) => {
+        setToken(data.token)
+        navigate(from, { replace: true })
+      })
+      .catch((err: Error) => {
+        setError(err.message || '登录失败，请重试')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   return (

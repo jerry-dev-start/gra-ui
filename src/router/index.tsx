@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Layout from '../layouts'
 import Login from '../pages/Login'
+import MenuPage from '../pages/Menu'
 import { RequireAuth, GuestOnly } from '../components/AuthGuard'
 
 const router = createBrowserRouter([
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
       {
         path: 'settings',
         element: <div style={{ color: '#c8cdd8' }}>系统设置 — 待开发</div>,
+      },
+      {
+        path: 'menus',
+        element: <MenuPage />,
       },
     ],
   },

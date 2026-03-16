@@ -1,113 +1,189 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Layout as AntLayout, Menu, theme } from 'antd'
+import {
+  DashboardOutlined,
+  SettingOutlined,
+  UserOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  LogoutOutlined,
+  MenuOutlined,
+} from '@ant-design/icons'
+import type { MenuProps } from 'antd'
+import { removeToken } from '../utils/auth'
+import { useUserStore } from '@/stores/user'
 import './index.css'
 
-interface MenuItem {
-  key: string
-  label: string
-  icon: React.ReactNode
-}
+const { Sider, Header, Content } = AntLayout
 
-const menuItems: MenuItem[] = [
+type AntMenuItem = Required<MenuProps>['items'][number]
+
+const menuItems: AntMenuItem[] = [
   {
     key: '/dashboard',
+    icon: <DashboardOutlined />,
     label: '仪表盘',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-        <rect x="11" y="2" width="7" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-        <rect x="2" y="11" width="7" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-        <rect x="11" y="8" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-      </svg>
-    ),
   },
   {
-    key: '/users',
-    label: '用户管理',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="10" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M3 18c0-3.5 3.1-6 7-6s7 2.5 7 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    key: '/settings',
-    label: '系统设置',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6L16 16M4 16l1.4-1.4M14.6 5.4L16 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    ),
+    key: '/system',
+    icon: <SettingOutlined />,
+    label: '系统管理',
+    children: [
+      {
+        key: '/users',
+        icon: <UserOutlined />,
+        label: '用户管理',
+      },
+      {
+        key: '/menus',
+        icon: <MenuOutlined />,
+        label: '菜单管理',
+      },
+      {
+        key: '/settings',
+        icon: <SettingOutlined />,
+        label: '系统设置',
+      },
+    ],
   },
 ]
+
+/** 根据路径查找菜单标签 */
+function findLabel(items: AntMenuItem[], pathname: string): string {
+  for (const item of items ?? []) {
+    if (!item || !('key' in item)) continue
+    if (item.key === pathname) return (item as { label?: string }).label ?? ''
+    if ('children' in item && item.children) {
+      const found = findLabel(item.children as AntMenuItem[], pathname)
+      if (found) return found
+    }
+  }
+  return '首页'
+}
+
+/** 根据路径查找父级 key（用于自动展开子菜单） */
+function findOpenKey(items: AntMenuItem[], pathname: string): string | undefined {
+  for (const item of items ?? []) {
+    if (!item || !('key' in item)) continue
+    if ('children' in item && item.children) {
+      for (const child of item.children as AntMenuItem[]) {
+        if (child && 'key' in child && child.key === pathname) {
+          return item.key as string
+        }
+      }
+    }
+  }
+  return undefined
+}
 
 function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { token: themeToken } = theme.useToken()
+
+  const defaultOpenKey = findOpenKey(menuItems, location.pathname)
+
+  const { user, fetchUser, clearUser } = useUserStore()
+
+  const handleLogout = () => {
+    clearUser()
+    removeToken()
+    navigate('/login', { replace: true })
+  }
+
+  useEffect(() => {
+    fetchUser()
+  }, [])
 
   return (
-    <div className="layout">
-      {/* 侧边栏 */}
-      <aside className={`layout-sidebar${collapsed ? ' collapsed' : ''}`}>
-        <div className="sidebar-header">
-          <svg className="sidebar-logo" width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-            <rect width="40" height="40" rx="10" fill="rgba(0,194,255,0.15)" />
-            <path d="M12 20l6-8 6 8-6 8z" fill="#00c2ff" />
-            <path d="M22 16l4-2v12l-4-2z" fill="#00c2ff" opacity="0.6" />
-          </svg>
-          {!collapsed && <span className="sidebar-title">GRA Admin</span>}
+    <AntLayout style={{ minHeight: '100vh' }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        trigger={null}
+        width={240}
+        collapsedWidth={64}
+        style={{
+          background: themeToken.colorBgContainer,
+          borderRight: `1px solid ${themeToken.colorBorderSecondary}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div className="sidebar-header">
+            <svg className="sidebar-logo" width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+              <rect width="40" height="40" rx="10" fill="rgba(0,194,255,0.15)" />
+              <path d="M12 20l6-8 6 8-6 8z" fill="#00c2ff" />
+              <path d="M22 16l4-2v12l-4-2z" fill="#00c2ff" opacity="0.6" />
+            </svg>
+            {!collapsed && <span className="sidebar-title">GRA Admin</span>}
+          </div>
+
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={defaultOpenKey ? [defaultOpenKey] : []}
+            items={menuItems}
+            onClick={({ key }) => navigate(key)}
+            style={{ borderInlineEnd: 'none', flex: 1, overflow: 'auto' }}
+          />
+
+          {/* 底部用户信息 */}
+          <div
+            className="sidebar-user"
+            style={{
+              borderTop: `1px solid ${themeToken.colorBorderSecondary}`,
+              color: themeToken.colorText,
+            }}
+          >
+            <div className="sidebar-user-avatar">
+              {user?.avatar
+                ? <img src={user.avatar} alt="avatar" className="sidebar-user-avatar-img" />
+                : (user?.nickname?.charAt(0) || user?.username?.charAt(0) || '?')
+              }
+            </div>
+            {!collapsed && (
+              <>
+                <div className="sidebar-user-info">
+                  <span className="sidebar-user-name">{user?.nickname || user?.username || '--'}</span>
+                  <span className="sidebar-user-role" style={{ color: themeToken.colorTextSecondary }}>{user?.email || '--'}</span>
+                </div>
+                <LogoutOutlined
+                  className="sidebar-user-logout"
+                  onClick={handleLogout}
+                  title="退出登录"
+                />
+              </>
+            )}
+          </div>
         </div>
+      </Sider>
 
-        <nav className="sidebar-nav" aria-label="主导航">
-          {menuItems.map((item) => (
-            <button
-              key={item.key}
-              className={`nav-item${location.pathname === item.key ? ' active' : ''}`}
-              onClick={() => navigate(item.key)}
-              title={collapsed ? item.label : undefined}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {!collapsed && <span className="nav-label">{item.label}</span>}
-            </button>
-          ))}
-        </nav>
-
-        <button
-          className="sidebar-toggle"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={collapsed ? '展开菜单' : '收起菜单'}
+      <AntLayout>
+        <Header
+          style={{
+            padding: '0 24px',
+            background: themeToken.colorBgContainer,
+            borderBottom: `1px solid ${themeToken.colorBorderSecondary}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path
-              d={collapsed ? 'M7 4l5 5-5 5' : 'M11 4L6 9l5 5'}
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      </aside>
+          {collapsed
+            ? <MenuUnfoldOutlined onClick={() => setCollapsed(false)} style={{ fontSize: 18, cursor: 'pointer' }} />
+            : <MenuFoldOutlined onClick={() => setCollapsed(true)} style={{ fontSize: 18, cursor: 'pointer' }} />
+          }
+          <span>{findLabel(menuItems, location.pathname)}</span>
+        </Header>
 
-      {/* 右侧内容区 */}
-      <div className="layout-main">
-        <header className="layout-header">
-          <div className="header-breadcrumb">
-            {menuItems.find((m) => m.key === location.pathname)?.label ?? '首页'}
-          </div>
-          <div className="header-actions">
-            <div className="header-avatar" aria-label="用户头像">A</div>
-          </div>
-        </header>
-
-        <main className="layout-content">
+        <Content style={{ padding: 24 }}>
           <Outlet />
-        </main>
-      </div>
-    </div>
+        </Content>
+      </AntLayout>
+    </AntLayout>
   )
 }
 
