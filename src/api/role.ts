@@ -20,3 +20,13 @@ export function updateRole(data: RoleParams) {
 export function deleteRole(id: string) {
   return request.del<null>(`/roles/${id}`)
 }
+
+/** 获取角色已分配的菜单 ID 列表 */
+export function getRoleMenuIds(roleId: string) {
+  return request.get<string[]>(`/roles/${roleId}/menus`)
+}
+
+/** 保存角色的菜单权限 */
+export function saveRoleMenus(roleId: string, menuIds: string[]) {
+  return request.put<null>(`/roles/${roleId}/menus`, { menuIds })
+}

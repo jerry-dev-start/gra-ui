@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Breadcrumb, Layout as AntLayout, Menu, theme } from 'antd'
 import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons'
@@ -55,11 +55,25 @@ function findBreadcrumbTrail(
   return []
 }
 
+const MOBILE_BREAKPOINT = 768
+
 function Layout() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < MOBILE_BREAKPOINT)
   const navigate = useNavigate()
   const location = useLocation()
   const { token: themeToken } = theme.useToken()
+
+  // 监听窗口尺寸变化，移动端自动收起
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < MOBILE_BREAKPOINT)
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < MOBILE_BREAKPOINT
+      setIsMobile(mobile)
+      if (mobile) setCollapsed(true)
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const { user, clearUser } = useUserStore()
   const { menus, antdMenuItems, clearMenus } = useMenuStore()
@@ -166,10 +180,11 @@ function Layout() {
             flexShrink: 0,
           }}
         >
-          {collapsed
-            ? <MenuUnfoldOutlined onClick={() => setCollapsed(false)} style={{ fontSize: 18, cursor: 'pointer' }} />
-            : <MenuFoldOutlined onClick={() => setCollapsed(true)} style={{ fontSize: 18, cursor: 'pointer' }} />
-          }
+          {!isMobile && (
+            collapsed
+              ? <MenuUnfoldOutlined onClick={() => setCollapsed(false)} style={{ fontSize: 18, cursor: 'pointer' }} />
+              : <MenuFoldOutlined onClick={() => setCollapsed(true)} style={{ fontSize: 18, cursor: 'pointer' }} />
+          )}
           <Breadcrumb items={breadcrumbItems} />
         </Header>
 

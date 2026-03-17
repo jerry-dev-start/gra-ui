@@ -6,10 +6,12 @@ import {
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
   SearchOutlined, ReloadOutlined, LockOutlined, SafetyCertificateOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { RoleRecord, RoleParams } from '@/types/role'
 import { getRoleList, createRole, updateRole, deleteRole } from '@/api/role'
+import PermissionDrawer from './PermissionDrawer'
 
 function RolePage() {
   const [loading, setLoading] = useState(false)
@@ -21,6 +23,13 @@ function RolePage() {
   const [editRecord, setEditRecord] = useState<RoleRecord | null>(null)
   const [form] = Form.useForm<RoleParams>()
   const [searchForm] = Form.useForm()
+  const [permDrawerOpen, setPermDrawerOpen] = useState(false)
+  const [permRole, setPermRole] = useState<RoleRecord | null>(null)
+
+  const handlePerm = (record: RoleRecord) => {
+    setPermRole(record)
+    setPermDrawerOpen(true)
+  }
 
   const fetchData = async (p = page, ps = pageSize) => {
     setLoading(true)
@@ -164,9 +173,12 @@ function RolePage() {
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 220,
       render: (_, record) => (
         <Space size="small">
+          <Button type="link" size="small" icon={<SettingOutlined />} onClick={() => handlePerm(record)}>
+            权限
+          </Button>
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
@@ -291,6 +303,12 @@ function RolePage() {
           </Form.Item>
         </Form>
       </Modal>
+
+      <PermissionDrawer
+        open={permDrawerOpen}
+        role={permRole}
+        onClose={() => setPermDrawerOpen(false)}
+      />
     </>
   )
 }
