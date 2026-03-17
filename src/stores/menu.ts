@@ -34,7 +34,6 @@ export const useMenuStore = create<MenuState>((set) => ({
       const menus = await getMenuTree()
       const antdMenuItems = generateMenuItems(menus)
       const routes = generateRoutes(menus)
-      debugger
       set({ menus, antdMenuItems, routes, loaded: true })
     } catch {
       set({ menus: [], antdMenuItems: [], routes: [], loaded: true })

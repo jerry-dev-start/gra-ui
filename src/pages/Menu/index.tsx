@@ -7,6 +7,8 @@ import {
   PlusOutlined, EditOutlined, DeleteOutlined,
   FolderOutlined, MenuOutlined, KeyOutlined,
 } from '@ant-design/icons'
+import * as Icons from '@ant-design/icons'
+import IconPicker from '@/components/IconPicker'
 import type { ColumnsType } from 'antd/es/table'
 import type { MenuRecord, MenuParams, MenuType } from '@/types/menu'
 import { getMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu'
@@ -126,7 +128,11 @@ function MenuPage() {
       dataIndex: 'icon',
       width: 100,
       align: 'center',
-      render: (v: string) => v || '-',
+      render: (v: string) => {
+        if (!v) return '-'
+        const IconComp = (Icons as any)[v]
+        return IconComp ? <IconComp style={{ fontSize: 18 }} /> : v
+      },
     },
     {
       title: '路由路径',
@@ -262,7 +268,7 @@ function MenuPage() {
                   )}
                   {type !== 'button' && (
                     <Form.Item label="图标" name="icon">
-                      <Input placeholder="如 UserOutlined" />
+                      <IconPicker />
                     </Form.Item>
                   )}
                   {type === 'button' && (

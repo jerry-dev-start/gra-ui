@@ -1,0 +1,46 @@
+.icon-picker-dropdown {
+  width: 328px;
+}
+
+.icon-picker-grid {
+  max-height: 280px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.icon-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.65);
+  border: 1px solid transparent;
+}
+
+.icon-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #1677ff;
+}
+
+.icon-picker-item.selected {
+  background: rgba(22, 119, 255, 0.15);
+  border-color: #1677ff;
+  color: #1677ff;
+}
+
+.icon-picker-clear {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.icon-picker-clear:hover {
+  color: rgba(255, 255, 255, 0.85);
+}

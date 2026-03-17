@@ -1,41 +1,42 @@
 import { useEffect, useState } from 'react'
 import {
-  Table, Button, Space, Modal, Form, Input, Select,
-  Tag, Popconfirm, message, Card, Avatar, Row, Col,
+  Table, Button, Space, Modal, Form, Input, InputNumber, Select,
+  Tag, Popconfirm, message, Card, Row, Col, Tooltip,
 } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
-  SearchOutlined, ReloadOutlined, UserOutlined,
+  SearchOutlined, ReloadOutlined, LockOutlined, SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { User, UserParams } from '@/types/user'
-import { getUserList, createUser, updateUser, deleteUser } from '@/api/user'
+import type { RoleRecord, RoleParams } from '@/types/role'
+import { getRoleList, createRole, updateRole, deleteRole } from '@/api/role'
 
-function UserPage() {
+function RolePage() {
   const [loading, setLoading] = useState(false)
-  const [dataSource, setDataSource] = useState<User[]>([])
+  const [dataSource, setDataSource] = useState<RoleRecord[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editRecord, setEditRecord] = useState<User | null>(null)
-  const [form] = Form.useForm<UserParams>()
+  const [editRecord, setEditRecord] = useState<RoleRecord | null>(null)
+  const [form] = Form.useForm<RoleParams>()
   const [searchForm] = Form.useForm()
 
   const fetchData = async (p = page, ps = pageSize) => {
     setLoading(true)
     try {
-      const { username, phoneNumber } = searchForm.getFieldsValue()
-      const data = await getUserList({
-        username: username || undefined,
-        phoneNumber: phoneNumber || undefined,
+      const { roleName, roleCode, status } = searchForm.getFieldsValue()
+      const data = await getRoleList({
+        roleName: roleName || undefined,
+        roleCode: roleCode || undefined,
+        status: status ?? undefined,
         page: p,
         pageSize: ps,
       })
       setDataSource(data?.list ?? [])
       setTotal(data?.total ?? 0)
     } catch {
-      message.error('加载用户列表失败')
+      message.error('加载角色列表失败')
     } finally {
       setLoading(false)
     }
@@ -59,18 +60,17 @@ function UserPage() {
   const handleAdd = () => {
     setEditRecord(null)
     form.resetFields()
-    form.setFieldsValue({ status: 1 })
+    form.setFieldsValue({ status: 1, sortOrder: 0 })
     setModalOpen(true)
   }
 
-  const handleEdit = (record: User) => {
+  const handleEdit = (record: RoleRecord) => {
     setEditRecord(record)
     form.setFieldsValue({
-      username: record.username,
-      nickname: record.nickname,
-      avatar: record.avatar,
-      email: record.email,
-      phoneNumber: record.phoneNumber,
+      roleName: record.roleName,
+      roleCode: record.roleCode,
+      description: record.description,
+      sortOrder: record.sortOrder,
       status: record.status,
     })
     setModalOpen(true)
@@ -78,7 +78,7 @@ function UserPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteUser(id)
+      await deleteRole(id)
       message.success('删除成功')
       fetchData()
     } catch {
@@ -90,10 +90,10 @@ function UserPage() {
     try {
       const values = await form.validateFields()
       if (editRecord) {
-        await updateUser({ ...values, id: editRecord.id })
+        await updateRole({ ...values, id: editRecord.id })
         message.success('更新成功')
       } else {
-        await createUser(values)
+        await createRole(values)
         message.success('创建成功')
       }
       setModalOpen(false)
@@ -109,44 +109,37 @@ function UserPage() {
     fetchData(p, ps)
   }
 
-  const columns: ColumnsType<User> = [
+  const columns: ColumnsType<RoleRecord> = [
     {
-      title: '头像',
-      dataIndex: 'avatar',
-      width: 70,
-      align: 'center',
+      title: '角色名称',
+      dataIndex: 'roleName',
+      width: 150,
       render: (v: string, record) => (
-        <Avatar
-          src={v || undefined}
-          icon={!v ? <UserOutlined /> : undefined}
-          style={{ backgroundColor: v ? undefined : '#1677ff' }}
-        >
-          {!v && (record.nickname?.charAt(0) || record.username?.charAt(0))}
-        </Avatar>
+        <Space size={4}>
+          {record.isReadonly && (
+            <Tooltip title="系统内置"><LockOutlined style={{ color: '#faad14' }} /></Tooltip>
+          )}
+          {v}
+        </Space>
       ),
     },
     {
-      title: '用户名',
-      dataIndex: 'username',
-      width: 130,
+      title: '角色编码',
+      dataIndex: 'roleCode',
+      width: 150,
+      render: (v: string) => <Tag icon={<SafetyCertificateOutlined />}>{v}</Tag>,
     },
     {
-      title: '昵称',
-      dataIndex: 'nickname',
-      width: 130,
+      title: '描述',
+      dataIndex: 'description',
+      ellipsis: true,
       render: (v: string) => v || '-',
     },
     {
-      title: '邮箱',
-      dataIndex: 'email',
-      width: 200,
-      render: (v: string) => v || '-',
-    },
-    {
-      title: '手机号',
-      dataIndex: 'phoneNumber',
-      width: 140,
-      render: (v: string) => v || '-',
+      title: '排序',
+      dataIndex: 'sortOrder',
+      width: 80,
+      align: 'center',
     },
     {
       title: '状态',
@@ -158,8 +151,8 @@ function UserPage() {
       ),
     },
     {
-      title: '最后登录',
-      dataIndex: 'lastLoginDate',
+      title: '创建时间',
+      dataIndex: 'createdAt',
       width: 180,
       render: (v: string) => {
         if (!v) return '-'
@@ -177,31 +170,45 @@ function UserPage() {
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
-          <Popconfirm title="确定删除该用户？" onConfirm={() => handleDelete(record.id!)}>
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
+          {!record.isReadonly && (
+            <Popconfirm title="确定删除该角色？" onConfirm={() => handleDelete(record.id)}>
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                删除
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
   ]
 
   // PLACEHOLDER_COLUMNS
-
   return (
     <>
       <Card style={{ marginBottom: 16 }}>
         <Form form={searchForm} layout="inline">
           <Row gutter={[16, 16]} style={{ width: '100%' }}>
             <Col>
-              <Form.Item name="username" style={{ marginBottom: 0 }}>
-                <Input placeholder="用户名" prefix={<UserOutlined />} allowClear />
+              <Form.Item name="roleName" style={{ marginBottom: 0 }}>
+                <Input placeholder="角色名称" allowClear />
               </Form.Item>
             </Col>
             <Col>
-              <Form.Item name="phoneNumber" style={{ marginBottom: 0 }}>
-                <Input placeholder="手机号" allowClear />
+              <Form.Item name="roleCode" style={{ marginBottom: 0 }}>
+                <Input placeholder="角色编码" allowClear />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="status" style={{ marginBottom: 0 }}>
+                <Select
+                  placeholder="状态"
+                  allowClear
+                  style={{ width: 120 }}
+                  options={[
+                    { label: '启用', value: 1 },
+                    { label: '禁用', value: 0 },
+                  ]}
+                />
               </Form.Item>
             </Col>
             <Col>
@@ -219,19 +226,19 @@ function UserPage() {
       </Card>
 
       <Card
-        title="用户管理"
+        title="角色管理"
         extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增用户
+            新增角色
           </Button>
         }
       >
-        <Table<User>
+        <Table<RoleRecord>
           rowKey="id"
           columns={columns}
           dataSource={dataSource}
           loading={loading}
-          scroll={{ x: 1080 }}
+          scroll={{ x: 900 }}
           size="middle"
           pagination={{
             current: page,
@@ -246,7 +253,7 @@ function UserPage() {
       </Card>
 
       <Modal
-        title={editRecord ? '编辑用户' : '新增用户'}
+        title={editRecord ? '编辑角色' : '新增角色'}
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
@@ -255,36 +262,24 @@ function UserPage() {
       >
         <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} style={{ marginTop: 24 }}>
           <Form.Item
-            label="用户名"
-            name="username"
-            rules={[{ required: true, message: '请输入用户名' }]}
+            label="角色名称"
+            name="roleName"
+            rules={[{ required: true, message: '请输入角色名称' }]}
           >
-            <Input placeholder="请输入用户名" disabled={!!editRecord} />
-          </Form.Item>
-          {!editRecord && (
-            <Form.Item
-              label="密码"
-              name="password"
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password placeholder="请输入密码" />
-            </Form.Item>
-          )}
-          <Form.Item label="昵称" name="nickname">
-            <Input placeholder="请输入昵称" />
-          </Form.Item>
-          <Form.Item label="头像" name="avatar">
-            <Input placeholder="头像地址" />
+            <Input placeholder="如 管理员" />
           </Form.Item>
           <Form.Item
-            label="邮箱"
-            name="email"
-            rules={[{ type: 'email', message: '邮箱格式不正确' }]}
+            label="角色编码"
+            name="roleCode"
+            rules={[{ required: true, message: '请输入角色编码' }]}
           >
-            <Input placeholder="请输入邮箱" />
+            <Input placeholder="如 admin" disabled={!!editRecord} />
           </Form.Item>
-          <Form.Item label="手机号" name="phoneNumber">
-            <Input placeholder="请输入手机号" />
+          <Form.Item label="描述" name="description">
+            <Input.TextArea placeholder="角色描述" rows={3} />
+          </Form.Item>
+          <Form.Item label="排序" name="sortOrder">
+            <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="状态" name="status">
             <Select
@@ -300,4 +295,4 @@ function UserPage() {
   )
 }
 
-export default UserPage
+export default RolePage
