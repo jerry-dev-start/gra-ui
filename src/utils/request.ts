@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { message } from 'antd'
 import type { ApiResponse } from '../types/api'
 import { getToken, removeToken } from './auth'
 
@@ -20,9 +21,10 @@ instance.interceptors.request.use((config) => {
 // 响应拦截：统一处理错误
 instance.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    const { code, message } = response.data
+    const { code, message: msg } = response.data
     if (code !== 0) {
-      return Promise.reject(new Error(message || '请求失败'))
+      message.error(msg || '请求失败')
+      return Promise.reject(new Error(msg || '请求失败'))
     }
     return response
   },
