@@ -24,6 +24,9 @@ export interface User {
 
   /** 最后登录时间 */
   lastLoginDate?: string;
+
+  /** 角色 ID 列表 */
+  roleIds?: string[];
 }
 
 /** 用户列表查询参数 */
@@ -50,4 +53,5 @@ export interface UserParams {
   phoneNumber?: string
   status?: 0 | 1
   password?: string
+  roleIds?: string[]
 }

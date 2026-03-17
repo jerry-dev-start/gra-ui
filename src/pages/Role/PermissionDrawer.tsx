@@ -137,6 +137,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
       onClose={onClose}
       width={480}
       destroyOnClose
+      styles={{ body: { padding: '16px 24px', overflow: 'hidden' } }}
     >
       <Tabs
         items={[
@@ -154,7 +155,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
                 <Empty description="暂无菜单数据" />
               </div>
             ) : (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 148px)' }}>
                 <div style={{
                   marginBottom: 12,
                   padding: '8px 12px',
@@ -163,6 +164,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  flexShrink: 0,
                 }}>
                   <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
                     已选 {checkedKeys.length + halfCheckedKeys.length} 项
@@ -177,13 +179,16 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
                   </Space>
                 </div>
                 <div style={{
-                  maxHeight: 'calc(100vh - 280px)',
+                  flex: 1,
+                  minHeight: 0,
                   overflow: 'auto',
                   padding: '4px 0',
+                  background: token.colorBgContainer,
                 }}>
                   <Tree
                     checkable
                     blockNode
+                    style={{ minHeight: '100%' }}
                     treeData={treeData}
                     checkedKeys={checkedKeys}
                     expandedKeys={expandedKeys}
@@ -191,7 +196,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
                     onCheck={handleCheck}
                   />
                 </div>
-              </>
+              </div>
             ),
           },
           {

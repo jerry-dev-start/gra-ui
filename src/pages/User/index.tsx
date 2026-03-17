@@ -9,7 +9,9 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { User, UserParams } from '@/types/user'
-import { getUserList, createUser, updateUser, deleteUser } from '@/api/user'
+import type { RoleRecord } from '@/types/role'
+import { getUserList, getUserDetail, createUser, updateUser, deleteUser } from '@/api/user'
+import { getAllRoles } from '@/api/role'
 
 function UserPage() {
   const [loading, setLoading] = useState(false)
@@ -19,6 +21,7 @@ function UserPage() {
   const [pageSize, setPageSize] = useState(10)
   const [modalOpen, setModalOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<User | null>(null)
+  const [roleOptions, setRoleOptions] = useState<RoleRecord[]>([])
   const [form] = Form.useForm<UserParams>()
   const [searchForm] = Form.useForm()
 
@@ -43,6 +46,7 @@ function UserPage() {
 
   useEffect(() => {
     fetchData()
+    getAllRoles().then(setRoleOptions).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = () => {
@@ -63,17 +67,27 @@ function UserPage() {
     setModalOpen(true)
   }
 
-  const handleEdit = (record: User) => {
+  const handleEdit = async (record: User) => {
     setEditRecord(record)
-    form.setFieldsValue({
-      username: record.username,
-      nickname: record.nickname,
-      avatar: record.avatar,
-      email: record.email,
-      phoneNumber: record.phoneNumber,
-      status: record.status,
-    })
+    form.resetFields()
     setModalOpen(true)
+    try {
+      const detail = await getUserDetail(record.id!)
+      if (detail) {
+        form.setFieldsValue({
+          username: detail.username,
+          nickname: detail.nickname,
+          avatar: detail.avatar,
+          email: detail.email,
+          phoneNumber: detail.phoneNumber,
+          status: detail.status,
+          roleIds: detail.roleIds ?? [],
+        })
+      }
+    } catch {
+      message.error('获取用户详情失败')
+      setModalOpen(false)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -250,50 +264,83 @@ function UserPage() {
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
-        width={560}
+        width={720}
         destroyOnClose
       >
-        <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} style={{ marginTop: 24 }}>
-          <Form.Item
-            label="用户名"
-            name="username"
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
-            <Input placeholder="请输入用户名" disabled={!!editRecord} />
-          </Form.Item>
-          {!editRecord && (
-            <Form.Item
-              label="密码"
-              name="password"
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password placeholder="请输入密码" />
-            </Form.Item>
-          )}
-          <Form.Item label="昵称" name="nickname">
-            <Input placeholder="请输入昵称" />
-          </Form.Item>
-          <Form.Item label="头像" name="avatar">
-            <Input placeholder="头像地址" />
-          </Form.Item>
-          <Form.Item
-            label="邮箱"
-            name="email"
-            rules={[{ type: 'email', message: '邮箱格式不正确' }]}
-          >
-            <Input placeholder="请输入邮箱" />
-          </Form.Item>
-          <Form.Item label="手机号" name="phoneNumber">
-            <Input placeholder="请输入手机号" />
-          </Form.Item>
-          <Form.Item label="状态" name="status">
-            <Select
-              options={[
-                { label: '启用', value: 1 },
-                { label: '禁用', value: 0 },
-              ]}
-            />
-          </Form.Item>
+        <Form form={form} labelCol={{ span: 6 }} wrapperCol={{ span: 17 }} style={{ marginTop: 24 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="用户名"
+                name="username"
+                rules={[{ required: true, message: '请输入用户名' }]}
+              >
+                <Input placeholder="请输入用户名" disabled={!!editRecord} />
+              </Form.Item>
+            </Col>
+            {!editRecord && (
+              <Col span={12}>
+                <Form.Item
+                  label="密码"
+                  name="password"
+                  rules={[{ required: true, message: '请输入密码' }]}
+                >
+                  <Input.Password placeholder="请输入密码" />
+                </Form.Item>
+              </Col>
+            )}
+            <Col span={12}>
+              <Form.Item label="昵称" name="nickname">
+                <Input placeholder="请输入昵称" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="头像" name="avatar">
+                <Input placeholder="头像地址" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="邮箱"
+                name="email"
+                rules={[{ type: 'email', message: '邮箱格式不正确' }]}
+              >
+                <Input placeholder="请输入邮箱" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="手机号" name="phoneNumber">
+                <Input placeholder="请输入手机号" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="状态" name="status">
+                <Select
+                  options={[
+                    { label: '启用', value: 1 },
+                    { label: '禁用', value: 2 },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item
+                label="角色"
+                name="roleIds"
+                labelCol={{ span: 3 }}
+                wrapperCol={{ span: 21 }}
+                style={{ marginRight: 'calc(50% * 1 / 24 + 8px)' }}
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="请选择角色"
+                  allowClear
+                  optionFilterProp="label"
+                  options={roleOptions.map(r => ({ label: r.roleName, value: r.id }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </>

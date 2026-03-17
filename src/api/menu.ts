@@ -3,7 +3,7 @@ import type { MenuRecord, MenuParams } from '@/types/menu'
 
 /** 获取菜单树 */
 export function getMenuTree() {
-  return request.get<MenuRecord[]>('/menus/tree')
+  return request.get<MenuRecord[]>('/menus/user/tree')
 }
 
 /** 创建菜单 */

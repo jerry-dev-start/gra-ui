@@ -1,9 +1,14 @@
 import request from '@/utils/request'
-import type { UserQuery, UserPageResult, UserParams } from '@/types/user'
+import type { User, UserQuery, UserPageResult, UserParams } from '@/types/user'
 
 /** 获取用户列表（分页） */
 export function getUserList(params: UserQuery) {
   return request.get<UserPageResult>('/users', params as unknown as Record<string, unknown>)
+}
+
+/** 获取用户详情 */
+export function getUserDetail(id: string) {
+  return request.get<User>(`/users/${id}`)
 }
 
 /** 创建用户 */

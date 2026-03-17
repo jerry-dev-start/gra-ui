@@ -1,3 +1,6 @@
+@import "tailwindcss" layer(utilities);
+@layer theme, base, components, utilities;
+
 /* Global Reset */
 *,
 *::before,

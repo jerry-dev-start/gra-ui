@@ -1,9 +1,15 @@
 import request from '@/utils/request'
-import type { RoleQuery, RolePageResult, RoleParams } from '@/types/role'
+import type { RoleQuery, RolePageResult, RoleParams, RoleRecord } from '@/types/role'
 
 /** 获取角色列表（分页） */
 export function getRoleList(params: RoleQuery) {
   return request.get<RolePageResult>('/roles', params as unknown as Record<string, unknown>)
+}
+
+/** 获取全部角色（不分页） */
+export function getAllRoles() {
+  return request.get<RolePageResult>('/roles', { page: 1, pageSize: 9999 } as unknown as Record<string, unknown>)
+    .then(res => res?.list ?? [] as RoleRecord[])
 }
 
 /** 创建角色 */
