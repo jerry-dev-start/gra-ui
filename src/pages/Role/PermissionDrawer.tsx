@@ -7,7 +7,7 @@ import {
 import type { TreeDataNode } from 'antd'
 import type { MenuRecord } from '@/types/menu'
 import type { RoleRecord } from '@/types/role'
-import { getMenuTree } from '@/api/menu'
+import { getAllMenuTree } from '@/api/menu'
 import { getRoleMenuIds, saveRoleMenus } from '@/api/role'
 
 interface Props {
@@ -74,7 +74,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!open || !role) return
     setLoading(true)
-    Promise.all([getMenuTree(), getRoleMenuIds(role.id)])
+    Promise.all([getAllMenuTree(), getRoleMenuIds(role.id)])
       .then(([tree, ids]) => {
         setMenuTree(tree ?? [])
         setExpandedKeys(collectParentKeys(tree ?? []))

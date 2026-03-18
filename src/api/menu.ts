@@ -1,9 +1,14 @@
 import request from '@/utils/request'
 import type { MenuRecord, MenuParams } from '@/types/menu'
 
-/** 获取菜单树 */
+/** 获取当前用户菜单树（侧边栏/路由用） */
 export function getMenuTree() {
   return request.get<MenuRecord[]>('/menus/user/tree')
+}
+
+/** 获取完整菜单树（菜单管理页面用） */
+export function getAllMenuTree() {
+  return request.get<MenuRecord[]>('/menus/tree')
 }
 
 /** 创建菜单 */

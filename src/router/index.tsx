@@ -1,8 +1,20 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Spin } from 'antd'
 import Layout from '../layouts'
 import Login from '../pages/Login'
 import { GuestOnly } from '../components/AuthGuard'
+
+const ProfilePage = lazy(() => import('../pages/Profile'))
+const profileRoute: RouteObject = {
+  path: 'profile',
+  element: (
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: 200 }}><Spin /></div>}>
+      <ProfilePage />
+    </Suspense>
+  ),
+}
 
 const loginRoute: RouteObject = {
   path: '/login',
@@ -37,6 +49,7 @@ export function createDynamicRouter(dynamicRoutes: RouteObject[]) {
           element: <Navigate to={dynamicRoutes[0]?.path ? `/${dynamicRoutes[0].path}` : '/login'} replace />,
         },
         ...dynamicRoutes,
+        profileRoute,
         {
           path: '*',
           element: (

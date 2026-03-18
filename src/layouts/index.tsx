@@ -145,7 +145,12 @@ function Layout() {
               color: themeToken.colorText,
             }}
           >
-            <div className="sidebar-user-avatar">
+            <div
+              className="sidebar-user-avatar"
+              onClick={() => navigate('/profile')}
+              style={{ cursor: 'pointer' }}
+              title="个人中心"
+            >
               {user?.avatar
                 ? <img src={user.avatar} alt="avatar" className="sidebar-user-avatar-img" />
                 : (user?.nickname?.charAt(0) || user?.username?.charAt(0) || '?')
@@ -153,7 +158,12 @@ function Layout() {
             </div>
             {!collapsed && (
               <>
-                <div className="sidebar-user-info">
+                <div
+                  className="sidebar-user-info"
+                  onClick={() => navigate('/profile')}
+                  style={{ cursor: 'pointer' }}
+                  title="个人中心"
+                >
                   <span className="sidebar-user-name">{user?.nickname || user?.username || '--'}</span>
                   <span className="sidebar-user-role" style={{ color: themeToken.colorTextSecondary }}>{user?.email || '--'}</span>
                 </div>

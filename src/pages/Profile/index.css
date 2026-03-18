@@ -1,0 +1,207 @@
+/* ========================================
+   Profile — 个人中心页面
+   ======================================== */
+
+/* --- 顶部 Banner --- */
+.profile-banner {
+  position: relative;
+  height: 180px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(135deg, #00c2ff 0%, #7b61ff 50%, #f759ab 100%);
+  overflow: hidden;
+}
+.profile-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(0, 194, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(123, 97, 255, 0.3) 0%, transparent 50%);
+}
+.profile-banner-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image:
+    repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%);
+  background-size: 20px 20px;
+}
+
+/* --- 头像区 --- */
+.profile-avatar-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-top: -52px;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+}
+.profile-avatar-wrapper {
+  flex-shrink: 0;
+}
+.profile-avatar-wrapper .ant-avatar {
+  border: 4px solid var(--avatar-border, #1f1f1f);
+  box-shadow: 0 4px 20px rgba(0, 194, 255, 0.3);
+}
+.profile-user-brief {
+  padding-bottom: 8px;
+  min-width: 0;
+}
+.profile-user-name {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-user-role-tag {
+  margin-top: 4px;
+}
+
+/* --- 统计条 --- */
+.profile-stats {
+  display: flex;
+  gap: 0;
+  margin-top: 20px;
+  padding: 0 32px;
+}
+.profile-stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 16px 0;
+  position: relative;
+}
+.profile-stat-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: var(--stat-divider, rgba(255, 255, 255, 0.08));
+}
+.profile-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.profile-stat-label {
+  font-size: 13px;
+  margin-top: 4px;
+  opacity: 0.55;
+}
+
+/* --- 信息卡片网格 --- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-avatar-section {
+    padding: 0 16px;
+  }
+  .profile-stats {
+    padding: 0 16px;
+  }
+}
+
+/* --- 信息项 --- */
+.profile-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+}
+.profile-info-item:not(:last-child) {
+  border-bottom: 1px solid var(--info-border, rgba(255, 255, 255, 0.06));
+}
+.profile-info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.profile-info-content {
+  flex: 1;
+  min-width: 0;
+}
+.profile-info-label {
+  font-size: 12px;
+  opacity: 0.5;
+  line-height: 1.2;
+}
+.profile-info-value {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- 安全项 --- */
+.profile-security-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+.profile-security-item:not(:last-child) {
+  border-bottom: 1px solid var(--info-border, rgba(255, 255, 255, 0.06));
+}
+.profile-security-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profile-security-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* --- 登录日志 --- */
+.profile-log-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.profile-log-item:not(:last-child) {
+  border-bottom: 1px solid var(--info-border, rgba(255, 255, 255, 0.06));
+}
+.profile-log-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.profile-log-text {
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-log-time {
+  font-size: 12px;
+  opacity: 0.45;
+  flex-shrink: 0;
+}

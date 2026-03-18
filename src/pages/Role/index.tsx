@@ -125,7 +125,7 @@ function RolePage() {
       width: 150,
       render: (v: string, record) => (
         <Space size={4}>
-          {record.isReadonly && (
+          {!!record.isReadonly && (
             <Tooltip title="系统内置"><LockOutlined style={{ color: '#faad14' }} /></Tooltip>
           )}
           {v}
@@ -250,7 +250,7 @@ function RolePage() {
           columns={columns}
           dataSource={dataSource}
           loading={loading}
-          scroll={{ x: 900 }}
+          scroll={{ x: 'max-content' }}
           size="middle"
           pagination={{
             current: page,
