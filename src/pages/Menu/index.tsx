@@ -11,7 +11,7 @@ import * as Icons from '@ant-design/icons'
 import IconPicker from '@/components/IconPicker'
 import type { ColumnsType } from 'antd/es/table'
 import type { MenuRecord, MenuParams, MenuType } from '@/types/menu'
-import { getMenuTree, getAllMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu'
+import { getAllMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu'
 
 const menuTypeMap: Record<MenuType, { label: string; color: string; icon: React.ReactNode }> = {
   directory: { label: '目录', color: 'blue', icon: <FolderOutlined /> },
@@ -130,7 +130,7 @@ function MenuPage() {
       align: 'center',
       render: (v: string) => {
         if (!v) return '-'
-        const IconComp = (Icons as any)[v]
+        const IconComp = (Icons as unknown as Record<string, React.ComponentType<{ style?: React.CSSProperties }>>)[v]
         return IconComp ? <IconComp style={{ fontSize: 18 }} /> : v
       },
     },

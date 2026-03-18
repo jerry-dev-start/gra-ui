@@ -33,6 +33,7 @@ export interface User {
 export interface UserQuery {
   username?: string
   phoneNumber?: string
+  deptId?: string
   page: number
   pageSize: number
 }

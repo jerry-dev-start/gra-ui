@@ -19,12 +19,12 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--ant-color-text-secondary);
   border: 1px solid transparent;
 }
 
 .icon-picker-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ant-color-fill-tertiary);
   color: #1677ff;
 }
 
@@ -36,11 +36,11 @@
 
 .icon-picker-clear {
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--ant-color-text-quaternary);
   font-size: 14px;
   line-height: 1;
 }
 
 .icon-picker-clear:hover {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--ant-color-text-secondary);
 }

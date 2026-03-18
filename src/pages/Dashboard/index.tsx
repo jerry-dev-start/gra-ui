@@ -1,6 +1,7 @@
 import { Card, Col, Row, Statistic, theme, Tag } from 'antd'
 import { UserOutlined, MenuOutlined, SafetyOutlined, RiseOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import { Line, Column, Pie } from '@ant-design/charts'
+import { useThemeStore } from '@/stores/theme'
 import './index.css'
 
 /* ── 模拟数据 ── */
@@ -53,13 +54,15 @@ const statCards = [
 
 function Dashboard() {
   const { token } = theme.useToken()
+  const themeMode = useThemeStore((s) => s.mode)
+  const chartTheme = themeMode === 'dark' ? 'classicDark' : 'classic'
 
   const lineConfig = {
     data: visitData,
     xField: 'date',
     yField: 'value',
     smooth: true,
-    theme: 'classicDark',
+    theme: chartTheme,
     style: { lineWidth: 3, stroke: '#00c2ff' },
     area: { style: { fill: 'linear-gradient(270deg, #00c2ff22, #00c2ff08)' } },
     axis: {
@@ -74,7 +77,7 @@ function Dashboard() {
     data: moduleData,
     xField: 'module',
     yField: 'count',
-    theme: 'classicDark',
+    theme: chartTheme,
     style: {
       radiusEndTop: 4,
       fill: 'linear-gradient(180deg, #7b61ff, #7b61ff44)',
@@ -91,7 +94,7 @@ function Dashboard() {
     data: roleData,
     angleField: 'value',
     colorField: 'type',
-    theme: 'classicDark',
+    theme: chartTheme,
     innerRadius: 0.6,
     style: { stroke: token.colorBgContainer, lineWidth: 3 },
     label: { text: 'type', style: { fill: token.colorText, fontSize: 12 } },

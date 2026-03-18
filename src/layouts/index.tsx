@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Breadcrumb, Layout as AntLayout, Menu, theme } from 'antd'
-import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined } from '@ant-design/icons'
+import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import type { MenuRecord } from '@/types/menu'
 import { removeToken } from '../utils/auth'
 import { useUserStore } from '@/stores/user'
 import { useMenuStore } from '@/stores/menu'
+import { useThemeStore } from '@/stores/theme'
 import './index.css'
 
 const { Sider, Header, Content } = AntLayout
@@ -77,6 +78,7 @@ function Layout() {
 
   const { user, clearUser } = useUserStore()
   const { menus, antdMenuItems, clearMenus } = useMenuStore()
+  const { mode: themeMode, toggleMode } = useThemeStore()
 
   const defaultOpenKey = findOpenKey(antdMenuItems, location.pathname)
 
@@ -196,6 +198,11 @@ function Layout() {
               : <MenuFoldOutlined onClick={() => setCollapsed(true)} style={{ fontSize: 18, cursor: 'pointer' }} />
           )}
           <Breadcrumb items={breadcrumbItems} />
+          <div style={{ flex: 1 }} />
+          {themeMode === 'dark'
+            ? <SunOutlined onClick={toggleMode} style={{ fontSize: 18, cursor: 'pointer' }} title="切换亮色模式" />
+            : <MoonOutlined onClick={toggleMode} style={{ fontSize: 18, cursor: 'pointer' }} title="切换暗色模式" />
+          }
         </Header>
 
         <Content style={{ padding: 24, overflow: 'auto', flex: 1 }}>

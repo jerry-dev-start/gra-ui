@@ -1,17 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Table, Button, Space, Modal, Form, Input, Select,
-  Tag, Popconfirm, message, Card, Avatar, Row, Col,
+  Tag, Popconfirm, message, Card, Avatar, Row, Col, Tree, Empty, Pagination,
 } from 'antd'
+import type { TreeProps } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
   SearchOutlined, ReloadOutlined, UserOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { User, UserParams } from '@/types/user'
 import type { RoleRecord } from '@/types/role'
+import type { DeptRecord } from '@/types/dept'
 import { getUserList, getUserDetail, createUser, updateUser, deleteUser } from '@/api/user'
 import { getAllRoles } from '@/api/role'
+import { getDeptTree } from '@/api/dept'
+
+/** 将部门树转为 antd Tree 需要的 DataNode 格式 */
+function toTreeData(list: DeptRecord[]): TreeProps['treeData'] {
+  return list.map((item) => ({
+    key: item.id,
+    title: item.name,
+    children: item.children?.length ? toTreeData(item.children) : undefined,
+  }))
+}
+
+/** 递归收集所有部门 key，用于默认展开 */
+function collectKeys(list: DeptRecord[]): string[] {
+  const keys: string[] = []
+  list.forEach((item) => {
+    keys.push(item.id)
+    if (item.children?.length) keys.push(...collectKeys(item.children))
+  })
+  return keys
+}
 
 function UserPage() {
   const [loading, setLoading] = useState(false)
@@ -25,13 +48,34 @@ function UserPage() {
   const [form] = Form.useForm<UserParams>()
   const [searchForm] = Form.useForm()
 
-  const fetchData = async (p = page, ps = pageSize) => {
+  // 部门树状态
+  const [deptTree, setDeptTree] = useState<DeptRecord[]>([])
+  const [selectedDeptId, setSelectedDeptId] = useState<string>()
+  const [deptLoading, setDeptLoading] = useState(false)
+
+  const treeData = useMemo(() => toTreeData(deptTree), [deptTree])
+  const expandedKeys = useMemo(() => collectKeys(deptTree), [deptTree])
+
+  const fetchDeptTree = async () => {
+    setDeptLoading(true)
+    try {
+      const data = await getDeptTree()
+      setDeptTree(data ?? [])
+    } catch {
+      message.error('加载部门树失败')
+    } finally {
+      setDeptLoading(false)
+    }
+  }
+
+  const fetchData = async (p = page, ps = pageSize, deptId = selectedDeptId) => {
     setLoading(true)
     try {
       const { username, phoneNumber } = searchForm.getFieldsValue()
       const data = await getUserList({
         username: username || undefined,
         phoneNumber: phoneNumber || undefined,
+        deptId: deptId || undefined,
         page: p,
         pageSize: ps,
       })
@@ -46,8 +90,16 @@ function UserPage() {
 
   useEffect(() => {
     fetchData()
+    fetchDeptTree()
     getAllRoles().then(setRoleOptions).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDeptSelect: TreeProps['onSelect'] = (selectedKeys) => {
+    const deptId = selectedKeys.length ? String(selectedKeys[0]) : undefined
+    setSelectedDeptId(deptId)
+    setPage(1)
+    fetchData(1, pageSize, deptId)
+  }
 
   const handleSearch = () => {
     setPage(1)
@@ -56,8 +108,9 @@ function UserPage() {
 
   const handleReset = () => {
     searchForm.resetFields()
+    setSelectedDeptId(undefined)
     setPage(1)
-    fetchData(1, pageSize)
+    fetchData(1, pageSize, undefined)
   }
 
   const handleAdd = () => {
@@ -201,11 +254,9 @@ function UserPage() {
     },
   ]
 
-  // PLACEHOLDER_COLUMNS
-
   return (
-    <>
-      <Card style={{ marginBottom: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
+      <Card style={{ marginBottom: 16, flexShrink: 0 }}>
         <Form form={searchForm} layout="inline">
           <Row gutter={[16, 16]} style={{ width: '100%' }}>
             <Col>
@@ -232,32 +283,89 @@ function UserPage() {
         </Form>
       </Card>
 
-      <Card
-        title="用户管理"
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增用户
-          </Button>
-        }
-      >
-        <Table<User>
-          rowKey="id"
-          columns={columns}
-          dataSource={dataSource}
-          loading={loading}
-          scroll={{ x: 1080 }}
-          size="middle"
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: handlePageChange,
-          }}
-        />
-      </Card>
+      <Row gutter={16} style={{ flex: 1, alignItems: 'stretch', minHeight: 0 }}>
+        {/* 左侧：部门树 */}
+        <Col flex="280px" style={{ display: 'flex' }}>
+          <Card
+            title={
+              <Space>
+                <ApartmentOutlined />
+                <span>部门列表</span>
+              </Space>
+            }
+            size="small"
+            styles={{ body: { padding: '8px 4px', flex: 1, overflow: 'auto' } }}
+            style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+            loading={deptLoading}
+          >
+            {treeData?.length ? (
+              <Tree
+                treeData={treeData}
+                defaultExpandAll
+                selectedKeys={selectedDeptId ? [selectedDeptId] : []}
+                onSelect={handleDeptSelect}
+                blockNode
+                style={{ padding: '4px 0' }}
+              />
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无部门" />
+            )}
+          </Card>
+        </Col>
+
+        {/* 右侧：用户列表 */}
+        <Col flex="1" style={{ display: 'flex', minHeight: 0 }}>
+          <Card
+            title="用户管理"
+            style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+            styles={{ body: { flex: 1, overflow: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' } }}
+            extra={
+              <Space>
+                {selectedDeptId && (
+                  <Tag
+                    closable
+                    onClose={() => {
+                      setSelectedDeptId(undefined)
+                      setPage(1)
+                      fetchData(1, pageSize, undefined)
+                    }}
+                    color="blue"
+                  >
+                    已筛选部门
+                  </Tag>
+                )}
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                  新增用户
+                </Button>
+              </Space>
+            }
+          >
+            <div style={{ flex: 1, overflow: 'auto', padding: '16px 24px' }}>
+              <Table<User>
+                rowKey="id"
+                columns={columns}
+                dataSource={dataSource}
+                loading={loading}
+                scroll={{ x: 1080 }}
+                size="middle"
+                pagination={false}
+              />
+            </div>
+            <div style={{ padding: '12px 24px', borderTop: '1px solid #f0f0f0', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+              <Pagination
+                current={page}
+                pageSize={pageSize}
+                total={total}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(t) => `共 ${t} 条`}
+                onChange={handlePageChange}
+                size="small"
+              />
+            </div>
+          </Card>
+        </Col>
+      </Row>
 
       <Modal
         title={editRecord ? '编辑用户' : '新增用户'}
@@ -343,7 +451,7 @@ function UserPage() {
           </Row>
         </Form>
       </Modal>
-    </>
+    </div>
   )
 }
 

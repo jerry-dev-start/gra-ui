@@ -1,4 +1,4 @@
-import { Form, Input, Select, Button, Space } from 'antd'
+import { Form, Input, Select, Button, Space, Row, Col } from 'antd'
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { DeptQuery } from '@/types/dept'
 
@@ -24,27 +24,27 @@ function DeptSearch({ onSearch, onReset }: DeptSearchProps) {
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 mb-4">
-      <Form form={form} layout="inline">
-        <div className="flex flex-wrap items-center gap-3 w-full">
-          <Form.Item name="name" noStyle>
-            <Input
-              placeholder="部门名称"
-              allowClear
-              className="!w-48"
-            />
+    <Form form={form} layout="inline">
+      <Row gutter={[16, 16]} style={{ width: '100%' }}>
+        <Col>
+          <Form.Item name="name" style={{ marginBottom: 0 }}>
+            <Input placeholder="部门名称" allowClear />
           </Form.Item>
-          <Form.Item name="status" noStyle>
+        </Col>
+        <Col>
+          <Form.Item name="status" style={{ marginBottom: 0 }}>
             <Select
               placeholder="状态"
               allowClear
-              className="!w-28"
+              style={{ width: 120 }}
               options={[
                 { label: '启用', value: 1 },
                 { label: '禁用', value: 0 },
               ]}
             />
           </Form.Item>
+        </Col>
+        <Col>
           <Space>
             <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
               查询
@@ -53,9 +53,9 @@ function DeptSearch({ onSearch, onReset }: DeptSearchProps) {
               重置
             </Button>
           </Space>
-        </div>
-      </Form>
-    </div>
+        </Col>
+      </Row>
+    </Form>
   )
 }
 

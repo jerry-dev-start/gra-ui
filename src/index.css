@@ -20,10 +20,10 @@ body {
   min-height: 100vh;
 }
 
-/* ── 全局滚动条 — 暗色适配 ── */
+/* ── 全局滚动条 — 亮暗适配 ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 *::-webkit-scrollbar {
   width: 6px;
@@ -33,9 +33,20 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 3px;
 }
 *::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 暗色模式滚动条 */
+.dark-scrollbar * {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+.dark-scrollbar *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+.dark-scrollbar *::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }

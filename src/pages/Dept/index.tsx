@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Tag, Popconfirm, message, theme } from 'antd'
+import { Table, Button, Space, Tag, Popconfirm, message, Card, Tooltip } from 'antd'
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
   ApartmentOutlined, UserOutlined, PhoneOutlined, MailOutlined,
   ExpandAltOutlined, ShrinkOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { DeptRecord, DeptQuery } from '@/types/dept'
+import type { DeptRecord, DeptQuery, DeptParams } from '@/types/dept'
 import { getDeptTree, createDept, updateDept, deleteDept } from '@/api/dept'
-import type { DeptParams } from '@/types/dept'
 import DeptSearch from './components/DeptSearch'
 import DeptModal from './components/DeptModal'
 
@@ -29,7 +28,6 @@ function countChildren(node: DeptRecord): number {
 }
 
 function DeptPage() {
-  const { token: t } = theme.useToken()
   const [loading, setLoading] = useState(false)
   const [treeData, setTreeData] = useState<DeptRecord[]>([])
   const [modalOpen, setModalOpen] = useState(false)
@@ -109,18 +107,15 @@ function DeptPage() {
       dataIndex: 'name',
       width: 260,
       render: (v: string, record) => (
-        <span className="inline-flex items-center gap-2">
+        <Space size={6}>
           <ApartmentOutlined style={{ color: '#00c2ff', fontSize: 15 }} />
-          <span className="font-medium">{v}</span>
+          <span style={{ fontWeight: 500 }}>{v}</span>
           {!!record.children?.length && (
-            <span
-              className="inline-flex items-center justify-center rounded-full px-1.5 text-[11px] leading-[18px]"
-              style={{ background: 'rgba(0,194,255,0.12)', color: '#00c2ff' }}
-            >
+            <Tag color="processing" bordered={false} style={{ borderRadius: 10, marginLeft: 2 }}>
               {countChildren(record)}
-            </span>
+            </Tag>
           )}
-        </span>
+        </Space>
       ),
     },
     {
@@ -128,22 +123,22 @@ function DeptPage() {
       dataIndex: 'leader',
       width: 120,
       render: (v: string) => v ? (
-        <span className="inline-flex items-center gap-1.5">
+        <Space size={4}>
           <UserOutlined style={{ color: '#7b61ff', fontSize: 13 }} />
           {v}
-        </span>
-      ) : <span className="opacity-30">--</span>,
+        </Space>
+      ) : '-',
     },
     {
       title: '联系电话',
       dataIndex: 'phone',
       width: 140,
       render: (v: string) => v ? (
-        <span className="inline-flex items-center gap-1.5">
+        <Space size={4}>
           <PhoneOutlined style={{ color: '#36cfc9', fontSize: 13 }} />
           {v}
-        </span>
-      ) : <span className="opacity-30">--</span>,
+        </Space>
+      ) : '-',
     },
     {
       title: '邮箱',
@@ -151,11 +146,11 @@ function DeptPage() {
       width: 200,
       ellipsis: true,
       render: (v: string) => v ? (
-        <span className="inline-flex items-center gap-1.5">
+        <Space size={4}>
           <MailOutlined style={{ color: '#f759ab', fontSize: 13 }} />
           {v}
-        </span>
-      ) : <span className="opacity-30">--</span>,
+        </Space>
+      ) : '-',
     },
     {
       title: '排序',
@@ -169,11 +164,7 @@ function DeptPage() {
       width: 80,
       align: 'center',
       render: (v: number) => (
-        <Tag
-          color={v === 1 ? 'success' : 'error'}
-          bordered={false}
-          className="!rounded-full !px-2.5"
-        >
+        <Tag color={v === 1 ? 'success' : 'error'} bordered={false}>
           {v === 1 ? '启用' : '禁用'}
         </Tag>
       ),
@@ -183,14 +174,10 @@ function DeptPage() {
       dataIndex: 'createdAt',
       width: 170,
       render: (v: string) => {
-        if (!v) return '--'
+        if (!v) return '-'
         const d = new Date(v)
         const pad = (n: number) => String(n).padStart(2, '0')
-        return (
-          <span className="text-xs opacity-60">
-            {d.getFullYear()}-{pad(d.getMonth() + 1)}-{pad(d.getDate())} {pad(d.getHours())}:{pad(d.getMinutes())}
-          </span>
-        )
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
       },
     },
     {
@@ -199,20 +186,10 @@ function DeptPage() {
       width: 200,
       render: (_, record) => (
         <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => handleAdd(record.id)}
-          >
+          <Button type="link" size="small" icon={<PlusOutlined />} onClick={() => handleAdd(record.id)}>
             添加
           </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
           <Popconfirm
@@ -231,48 +208,33 @@ function DeptPage() {
 
   return (
     <>
-      <DeptSearch onSearch={handleSearch} onReset={handleReset} />
+      <Card style={{ marginBottom: 16 }}>
+        <DeptSearch onSearch={handleSearch} onReset={handleReset} />
+      </Card>
 
-      <div
-        className="rounded-xl border border-white/[0.06] overflow-hidden"
-        style={{ background: t.colorBgContainer }}
-      >
-        {/* 标题栏 */}
-        <div
-          className="flex items-center justify-between px-5 py-3.5"
-          style={{ borderBottom: `1px solid ${t.colorBorderSecondary}` }}
-        >
-          <div className="flex items-center gap-2.5">
-            <div
-              className="flex items-center justify-center w-8 h-8 rounded-lg"
-              style={{ background: 'rgba(0,194,255,0.12)' }}
-            >
-              <ApartmentOutlined style={{ color: '#00c2ff', fontSize: 16 }} />
-            </div>
-            <span className="text-base font-semibold" style={{ color: t.colorText }}>
-              部门管理
-            </span>
-            <span
-              className="inline-flex items-center justify-center rounded-full px-2 text-xs leading-5"
-              style={{ background: 'rgba(123,97,255,0.12)', color: '#7b61ff' }}
-            >
-              {collectKeys(treeData).length} 个部门
-            </span>
-          </div>
+      <Card
+        title={
           <Space>
-            <Button
-              size="small"
-              icon={expandedKeys.length > 0 ? <ShrinkOutlined /> : <ExpandAltOutlined />}
-              onClick={toggleExpand}
-            >
-              {expandedKeys.length > 0 ? '全部折叠' : '全部展开'}
-            </Button>
+            <ApartmentOutlined />
+            <span>部门管理</span>
+            <Tag color="blue" bordered={false}>{collectKeys(treeData).length} 个部门</Tag>
+          </Space>
+        }
+        extra={
+          <Space>
+            <Tooltip title={expandedKeys.length > 0 ? '全部折叠' : '全部展开'}>
+              <Button
+                type="text"
+                icon={expandedKeys.length > 0 ? <ShrinkOutlined /> : <ExpandAltOutlined />}
+                onClick={toggleExpand}
+              />
+            </Tooltip>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => handleAdd()}>
               新增部门
             </Button>
           </Space>
-        </div>
-
+        }
+      >
         <Table<DeptRecord>
           rowKey="id"
           columns={columns}
@@ -285,9 +247,8 @@ function DeptPage() {
           }}
           scroll={{ x: 'max-content' }}
           size="middle"
-          className="[&_.ant-table]:!rounded-none"
         />
-      </div>
+      </Card>
 
       <DeptModal
         open={modalOpen}

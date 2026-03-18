@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { ConfigProvider, Spin, theme } from 'antd'
 import { useAuthStore } from './utils/auth'
 import { useUserStore } from './stores/user'
 import { useMenuStore } from './stores/menu'
+import { useThemeStore } from './stores/theme'
 import { createStaticRouter, createDynamicRouter } from './router'
 import type { RouterProviderProps } from 'react-router-dom'
 
@@ -13,7 +14,23 @@ function App() {
   const fetchMenus = useMenuStore((s) => s.fetchMenus)
   const loaded = useMenuStore((s) => s.loaded)
   const routes = useMenuStore((s) => s.routes)
+  const themeMode = useThemeStore((s) => s.mode)
   const [initializing, setInitializing] = useState(hasToken)
+
+  const algorithm = useMemo(
+    () => (themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm),
+    [themeMode],
+  )
+
+  // 同步滚动条样式 class 到 document.documentElement
+  useEffect(() => {
+    const root = document.documentElement
+    if (themeMode === 'dark') {
+      root.classList.add('dark-scrollbar')
+    } else {
+      root.classList.remove('dark-scrollbar')
+    }
+  }, [themeMode])
 
   // 缓存 router 实例，避免每次 render 都 createBrowserRouter
   const routerRef = useRef<RouterProviderProps['router'] | null>(null)
@@ -43,7 +60,7 @@ function App() {
 
   if (initializing) {
     return (
-      <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+      <ConfigProvider theme={{ algorithm }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
           <Spin size="large" />
         </div>
@@ -52,7 +69,7 @@ function App() {
   }
 
   return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+    <ConfigProvider theme={{ algorithm }}>
       <RouterProvider router={routerRef.current!} />
     </ConfigProvider>
   )
