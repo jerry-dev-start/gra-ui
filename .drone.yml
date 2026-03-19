@@ -1,0 +1,52 @@
+kind: pipeline
+type: docker
+name: gra-ui
+
+node:
+  name: zdh
+
+steps:
+  # 第一步：npm 构建
+  - name: build
+    image: node:20-alpine
+    pull: if-not-exists
+    volumes:
+      - name: npm-cache
+        path: /root/.npm
+    commands:
+      - npm config set registry https://registry.npmmirror.com
+      - npm ci
+      - npm run build
+    when:
+      branch: main
+      event: push
+
+  # 第二步：构建镜像并部署
+  - name: local-deploy
+    image: docker:latest
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+    commands:
+      # 构建镜像
+      - docker build -t gra-ui:latest .
+      # 停止并删除旧容器（如果存在）
+      - docker stop gra-ui || true
+      - docker rm gra-ui || true
+      # 启动新容器，加入与后端相同的网络
+      - docker run -d --name gra-ui --network 1panel-network -p 8080:80 gra-ui:latest
+    when:
+      branch: main
+      event: push
+
+volumes:
+  - name: npm-cache
+    host:
+      path: /opt/tools/npm-cache
+  - name: docker-sock
+    host:
+      path: /var/run/docker.sock
+
+trigger:
+  branch: main
+  event: push
