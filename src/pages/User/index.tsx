@@ -26,16 +26,6 @@ function toTreeData(list: DeptRecord[]): TreeProps['treeData'] {
   }))
 }
 
-/** 递归收集所有部门 key，用于默认展开 */
-function collectKeys(list: DeptRecord[]): string[] {
-  const keys: string[] = []
-  list.forEach((item) => {
-    keys.push(item.id)
-    if (item.children?.length) keys.push(...collectKeys(item.children))
-  })
-  return keys
-}
-
 function UserPage() {
   const [loading, setLoading] = useState(false)
   const [dataSource, setDataSource] = useState<User[]>([])
@@ -54,7 +44,7 @@ function UserPage() {
   const [deptLoading, setDeptLoading] = useState(false)
 
   const treeData = useMemo(() => toTreeData(deptTree), [deptTree])
-  const expandedKeys = useMemo(() => collectKeys(deptTree), [deptTree])
+  // const expandedKeys = useMemo(() => collectKeys(deptTree), [deptTree])
 
   const fetchDeptTree = async () => {
     setDeptLoading(true)

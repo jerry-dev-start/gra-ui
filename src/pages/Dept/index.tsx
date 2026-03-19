@@ -243,7 +243,6 @@ function DeptPage() {
           pagination={false}
           expandable={{
             expandedRowKeys: expandedKeys,
-            onExpandedRowKeysChange: (keys) => setExpandedKeys(keys as string[]),
           }}
           scroll={{ x: 'max-content' }}
           size="middle"

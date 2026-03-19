@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Popover, Input, Empty } from 'antd'
 import * as Icons from '@ant-design/icons'
 import './index.css'

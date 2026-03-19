@@ -134,35 +134,30 @@ function Profile() {
             color="#00c2ff"
             label="用户名"
             value={user?.username}
-            bg={t.colorBgContainer}
           />
           <InfoItem
             icon={<IdcardOutlined />}
             color="#7b61ff"
             label="昵称"
             value={user?.nickname}
-            bg={t.colorBgContainer}
           />
           <InfoItem
             icon={<MailOutlined />}
             color="#36cfc9"
             label="邮箱"
             value={user?.email}
-            bg={t.colorBgContainer}
           />
           <InfoItem
             icon={<PhoneOutlined />}
             color="#f759ab"
             label="手机号"
             value={user?.phoneNumber}
-            bg={t.colorBgContainer}
           />
           <InfoItem
             icon={<CalendarOutlined />}
             color="#faad14"
             label="最后登录"
             value={user?.lastLoginDate}
-            bg={t.colorBgContainer}
           />
         </Card>
 
@@ -177,7 +172,6 @@ function Profile() {
             label="登录密码"
             desc="已设置"
             status="set"
-            bg={t.colorBgContainer}
           />
           <SecurityItem
             icon={<MailOutlined />}
@@ -185,7 +179,6 @@ function Profile() {
             label="邮箱绑定"
             desc={user?.email || '未绑定'}
             status={user?.email ? 'set' : 'unset'}
-            bg={t.colorBgContainer}
           />
           <SecurityItem
             icon={<PhoneOutlined />}
@@ -193,7 +186,6 @@ function Profile() {
             label="手机绑定"
             desc={user?.phoneNumber || '未绑定'}
             status={user?.phoneNumber ? 'set' : 'unset'}
-            bg={t.colorBgContainer}
           />
           <SecurityItem
             icon={<KeyOutlined />}
@@ -201,7 +193,6 @@ function Profile() {
             label="两步验证"
             desc="未开启"
             status="unset"
-            bg={t.colorBgContainer}
           />
         </Card>
 
@@ -257,12 +248,11 @@ function Profile() {
 
 /* ── 子组件 ── */
 
-function InfoItem({ icon, color, label, value, bg }: {
+function InfoItem({ icon, color, label, value }: {
   icon: React.ReactNode
   color: string
   label: string
   value?: string
-  bg: string
 }) {
   return (
     <div className="profile-info-item">
@@ -280,13 +270,12 @@ function InfoItem({ icon, color, label, value, bg }: {
   )
 }
 
-function SecurityItem({ icon, color, label, desc, status, bg }: {
+function SecurityItem({ icon, color, label, desc, status }: {
   icon: React.ReactNode
   color: string
   label: string
   desc: string
   status: 'set' | 'unset'
-  bg: string
 }) {
   return (
     <div className="profile-security-item">
