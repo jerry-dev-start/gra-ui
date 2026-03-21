@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import {
   Table, Button, Space, Modal, Form, Input, Select,
-  Tag, Popconfirm, message, Card, Avatar, Row, Col, Tree, Empty, Pagination,
+  Tag, Popconfirm, message, Card, Avatar, Row, Col, Tree, Empty, Pagination, TreeSelect,
 } from 'antd'
 import type { TreeProps } from 'antd'
 import {
@@ -124,6 +124,7 @@ function UserPage() {
           email: detail.email,
           phoneNumber: detail.phoneNumber,
           status: detail.status,
+          deptId: detail.deptId,
           roleIds: detail.roleIds ?? [],
         })
       }
@@ -164,6 +165,25 @@ function UserPage() {
     setPage(p)
     setPageSize(ps)
     fetchData(p, ps)
+  }
+  // 编辑时不能选自己和自己的子节点作为父级
+  const parentTreeData = [
+    { title: '顶级部门', value: '1', children: toTreeSelectData(deptTree, editRecord?.id) },
+  ]
+
+  /** 将部门树转为 TreeSelect 的 treeData 格式 */
+  function toTreeSelectData(
+      tree: DeptRecord[],
+      disabledId?: string,
+  ): { title: string; value: string; disabled?: boolean; children?: any[] }[] {
+    return tree.map((node) => ({
+      title: node.deptName,
+      value: node.id,
+      disabled: node.id === disabledId,
+      children: node.children?.length
+          ? toTreeSelectData(node.children, disabledId)
+          : undefined,
+    }))
   }
 
   const columns: ColumnsType<User> = [
@@ -412,29 +432,38 @@ function UserPage() {
               </Form.Item>
             </Col>
             <Col span={12}>
+              <Form.Item label="部门" name="deptId">
+                <TreeSelect
+                    treeData={parentTreeData}
+                    treeDefaultExpandAll
+                    placeholder="请选择部门"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
               <Form.Item label="状态" name="status">
                 <Select
-                  options={[
-                    { label: '启用', value: 1 },
-                    { label: '禁用', value: 2 },
-                  ]}
+                    options={[
+                      { label: '启用', value: 1 },
+                      { label: '禁用', value: 2 },
+                    ]}
                 />
               </Form.Item>
             </Col>
             <Col span={24}>
               <Form.Item
-                label="角色"
-                name="roleIds"
-                labelCol={{ span: 3 }}
-                wrapperCol={{ span: 21 }}
-                style={{ marginRight: 'calc(50% * 1 / 24 + 8px)' }}
+                  label="角色"
+                  name="roleIds"
+                  labelCol={{ span: 3 }}
+                  wrapperCol={{ span: 21 }}
+                  style={{ marginRight: 'calc(50% * 1 / 24 + 8px)' }}
               >
                 <Select
-                  mode="multiple"
-                  placeholder="请选择角色"
-                  allowClear
-                  optionFilterProp="label"
-                  options={roleOptions.map(r => ({ label: r.roleName, value: r.id }))}
+                    mode="multiple"
+                    placeholder="请选择角色"
+                    allowClear
+                    optionFilterProp="label"
+                    options={roleOptions.map(r => ({ label: r.roleName, value: r.id }))}
                 />
               </Form.Item>
             </Col>

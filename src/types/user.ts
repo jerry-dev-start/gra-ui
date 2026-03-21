@@ -25,6 +25,8 @@ export interface User {
   /** 最后登录时间 */
   lastLoginDate?: string;
 
+  deptId?: string;
+
   /** 角色 ID 列表 */
   roleIds?: string[];
 }
@@ -53,6 +55,7 @@ export interface UserParams {
   email?: string
   phoneNumber?: string
   status?: 0 | 1
+  deptId?: string
   password?: string
   roleIds?: string[]
 }
