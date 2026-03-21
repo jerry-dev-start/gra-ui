@@ -1,5 +1,5 @@
-/** 部门状态：1 启用 / 0 禁用 */
-export type DeptStatus = 0 | 1
+/** 部门状态：1 启用 / 2 禁用 */
+export type DeptStatus = "1" | "2"
 
 /** 部门记录 */
 export interface DeptRecord {
@@ -7,7 +7,7 @@ export interface DeptRecord {
   /** 父级部门 ID，顶级为 "0" */
   parentId: string
   /** 部门名称 */
-  name: string
+  deptName: string
   /** 负责人 */
   leader?: string
   /** 联系电话 */
@@ -15,7 +15,7 @@ export interface DeptRecord {
   /** 邮箱 */
   email?: string
   /** 显示排序 */
-  sort: number
+  sortOrder: number
   /** 状态 */
   status: DeptStatus
   createdAt?: string

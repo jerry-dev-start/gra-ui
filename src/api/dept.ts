@@ -13,10 +13,15 @@ export function createDept(data: DeptParams) {
 
 /** 更新部门 */
 export function updateDept(data: DeptParams) {
-  return request.put<null>(`/depts/${data.id}`, data)
+  return request.put<null>(`/depts`, data)
 }
 
 /** 删除部门 */
 export function deleteDept(id: string) {
   return request.del<null>(`/depts/${id}`)
+}
+
+/** 删除部门 */
+export function getDeptInfo(id: string) {
+  return request.get<DeptRecord>(`/depts/${id}`)
 }

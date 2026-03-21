@@ -21,7 +21,7 @@ import { getDeptTree } from '@/api/dept'
 function toTreeData(list: DeptRecord[]): TreeProps['treeData'] {
   return list.map((item) => ({
     key: item.id,
-    title: item.name,
+    title: item.deptName,
     children: item.children?.length ? toTreeData(item.children) : undefined,
   }))
 }

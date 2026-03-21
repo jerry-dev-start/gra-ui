@@ -32,7 +32,7 @@ function DeptPage() {
   const [treeData, setTreeData] = useState<DeptRecord[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<DeptRecord | null>(null)
-  const [defaultParentId, setDefaultParentId] = useState('0')
+  const [defaultParentId, setDefaultParentId] = useState('1')
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
 
   const fetchData = async (query?: DeptQuery) => {
@@ -56,7 +56,7 @@ function DeptPage() {
   const handleSearch = (values: DeptQuery) => fetchData(values)
   const handleReset = () => fetchData()
 
-  const handleAdd = (parentId = '0') => {
+  const handleAdd = (parentId = '1') => {
     setEditRecord(null)
     setDefaultParentId(parentId)
     setModalOpen(true)
@@ -72,9 +72,7 @@ function DeptPage() {
       await deleteDept(id)
       message.success('删除成功')
       fetchData()
-    } catch {
-      message.error('删除失败')
-    }
+    } catch { /* empty */ }
   }
 
   const handleSubmit = async (values: DeptParams) => {
@@ -104,7 +102,7 @@ function DeptPage() {
   const columns: ColumnsType<DeptRecord> = [
     {
       title: '部门名称',
-      dataIndex: 'name',
+      dataIndex: 'deptName',
       width: 260,
       render: (v: string, record) => (
         <Space size={6}>
@@ -154,7 +152,7 @@ function DeptPage() {
     },
     {
       title: '排序',
-      dataIndex: 'sort',
+      dataIndex: 'sortOrder',
       width: 70,
       align: 'center',
     },
@@ -164,8 +162,8 @@ function DeptPage() {
       width: 80,
       align: 'center',
       render: (v: number) => (
-        <Tag color={v === 1 ? 'success' : 'error'} bordered={false}>
-          {v === 1 ? '启用' : '禁用'}
+        <Tag color={v == 1 ? 'success' : 'error'} bordered={false}>
+          {v == 1 ? '启用' : '禁用'}
         </Tag>
       ),
     },
@@ -194,7 +192,7 @@ function DeptPage() {
           </Button>
           <Popconfirm
             title="确定删除该部门？"
-            description={record.children?.length ? '该部门下存在子部门，将一并删除' : undefined}
+            description={record.children?.length ? '部门删除后不可恢复' : undefined}
             onConfirm={() => handleDelete(record.id)}
           >
             <Button type="link" size="small" danger icon={<DeleteOutlined />}>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Modal, Form, Input, InputNumber, Select, TreeSelect } from 'antd'
 import type { DeptRecord, DeptParams } from '@/types/dept'
+import {getDeptInfo} from '@/api/dept.ts'
 
 interface DeptModalProps {
   open: boolean
@@ -18,7 +19,7 @@ function toTreeSelectData(
   disabledId?: string,
 ): { title: string; value: string; disabled?: boolean; children?: any[] }[] {
   return tree.map((node) => ({
-    title: node.name,
+    title: node.deptName,
     value: node.id,
     disabled: node.id === disabledId,
     children: node.children?.length
@@ -32,19 +33,28 @@ function DeptModal({ open, editRecord, treeData, onOk, onCancel, defaultParentId
 
   useEffect(() => {
     if (!open) return
+
+    const fetchData = async (id: string) => {
+      const res = await getDeptInfo(id)
+      if(res){
+        form.setFieldsValue({
+          id: res.id,
+          parentId: res.parentId,
+          name: res.deptName,
+          leader: res.leader,
+          phone: res.phone,
+          email: res.email,
+          sort: res.sortOrder,
+          status: res.status,
+        })
+      }
+    }
     if (editRecord) {
-      form.setFieldsValue({
-        parentId: editRecord.parentId,
-        name: editRecord.name,
-        leader: editRecord.leader,
-        phone: editRecord.phone,
-        email: editRecord.email,
-        sort: editRecord.sort,
-        status: editRecord.status,
-      })
+      //如果是编辑的话，去数据库查询数据
+      fetchData(editRecord.id).then(() => { })
     } else {
       form.resetFields()
-      form.setFieldsValue({ parentId: defaultParentId, sort: 0, status: 1 })
+      form.setFieldsValue({ parentId: defaultParentId, sort: 0, status: "1" })
     }
   }, [open, editRecord, defaultParentId, form])
 
@@ -63,7 +73,7 @@ function DeptModal({ open, editRecord, treeData, onOk, onCancel, defaultParentId
 
   // 编辑时不能选自己和自己的子节点作为父级
   const parentTreeData = [
-    { title: '顶级部门', value: '0', children: toTreeSelectData(treeData, editRecord?.id) },
+    { title: '顶级部门', value: '1', children: toTreeSelectData(treeData, editRecord?.id) },
   ]
 
   return (
@@ -122,8 +132,8 @@ function DeptModal({ open, editRecord, treeData, onOk, onCancel, defaultParentId
         <Form.Item label="状态" name="status">
           <Select
             options={[
-              { label: '启用', value: 1 },
-              { label: '禁用', value: 0 },
+              { label: '启用', value: '1' },
+              { label: '禁用', value: '2' },
             ]}
           />
         </Form.Item>
