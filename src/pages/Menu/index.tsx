@@ -35,15 +35,29 @@ function flattenTree(tree: MenuRecord[], prefix = ''): { id: string; name: strin
 function MenuPage() {
   const [loading, setLoading] = useState(false)
   const [treeData, setTreeData] = useState<MenuRecord[]>([])
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<MenuRecord | null>(null)
   const [form] = Form.useForm<MenuParams>()
+
+  const collectParentKeys = (list: MenuRecord[]): string[] => {
+    const keys: string[] = []
+    for (const node of list) {
+      if (node.children?.length) {
+        keys.push(node.id)
+        keys.push(...collectParentKeys(node.children))
+      }
+    }
+    return keys
+  }
 
   const fetchData = async () => {
     setLoading(true)
     try {
       const data = await getAllMenuTree()
-      setTreeData(data ?? [])
+      const menus = data ?? []
+      setTreeData(menus)
+      setExpandedRowKeys(collectParentKeys(menus))
     } catch {
       message.error('加载菜单失败')
     } finally {
@@ -218,7 +232,10 @@ function MenuPage() {
           dataSource={treeData}
           loading={loading}
           pagination={false}
-          defaultExpandAllRows
+          expandable={{
+            expandedRowKeys,
+            onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as string[]),
+          }}
           scroll={{ x: 1100 }}
           size="middle"
         />

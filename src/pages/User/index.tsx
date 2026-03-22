@@ -31,7 +31,7 @@ function UserPage() {
   const [dataSource, setDataSource] = useState<User[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(8)
   const [modalOpen, setModalOpen] = useState(false)
   const [editRecord, setEditRecord] = useState<User | null>(null)
   const [roleOptions, setRoleOptions] = useState<RoleRecord[]>([])
@@ -368,6 +368,7 @@ function UserPage() {
                 total={total}
                 showSizeChanger
                 showQuickJumper
+                pageSizeOptions={[8,10]}
                 showTotal={(t) => `共 ${t} 条`}
                 onChange={handlePageChange}
                 size="small"
