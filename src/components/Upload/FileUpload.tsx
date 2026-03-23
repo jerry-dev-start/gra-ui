@@ -27,7 +27,7 @@ function FileUpload({
   value = [],
   onChange,
   maxCount = 5,
-  maxSize = 100,
+  maxSize = 1000,
   accept,
   chunkThreshold = 5,
   disabled = false,
