@@ -3,6 +3,7 @@ import { UserOutlined, MenuOutlined, SafetyOutlined, RiseOutlined, ClockCircleOu
 import { Line, Column, Pie } from '@ant-design/charts'
 import { useThemeStore } from '@/stores/theme'
 import './index.css'
+import FileUpload from "@/components/Upload/FileUpload.tsx";
 
 /* ── 模拟数据 ── */
 
@@ -160,7 +161,12 @@ function Dashboard() {
             ))}
           </Card>
         </Col>
+
+        <Col xs={24} lg={10}>
+          <FileUpload />
+        </Col>
       </Row>
+
     </div>
   )
 }
