@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { setToken } from '../../utils/auth'
+import { useAuthStore } from '../../utils/auth'
 import { login } from '../../api/auth'
 import './index.css'
 
@@ -29,9 +29,15 @@ function Login() {
     }
 
     setLoading(true)
+    const { setTokens } = useAuthStore.getState()
     login({ username, password })
       .then((data) => {
-        setToken(data.token)
+        setTokens({
+          token: data.token,
+          refreshToken: data.refreshToken,
+          expireAt: data.expireAt,
+          refreshExpAt: data.refreshExpAt,
+        })
         navigate(from, { replace: true })
       })
       .catch((err: Error) => {

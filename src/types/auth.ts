@@ -9,6 +9,15 @@ export interface LoginParams {
 /** 登录响应 Data */
 export interface LoginResult {
   token: string
+  refreshToken: string
+  expireAt: number
+  refreshExpAt: number
+}
+
+/** 刷新 Token 响应 Data */
+export interface RefreshResult {
+  token: string
+  expireAt: number
 }
 
 export interface UserAllInfo {

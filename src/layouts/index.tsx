@@ -5,6 +5,7 @@ import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LogoutOutlined, Sun
 import type { MenuProps } from 'antd'
 import type { MenuRecord } from '@/types/menu'
 import { removeToken } from '../utils/auth'
+import { logout } from '../api/auth'
 import { useUserStore } from '@/stores/user'
 import { useMenuStore } from '@/stores/menu'
 import { useThemeStore } from '@/stores/theme'
@@ -99,10 +100,12 @@ function Layout() {
   }, [menus, location.pathname])
 
   const handleLogout = () => {
-    clearUser()
-    clearMenus()
-    removeToken()
-    navigate('/login', { replace: true })
+    logout().finally(() => {
+      clearUser()
+      clearMenus()
+      removeToken()
+      navigate('/login', { replace: true })
+    })
   }
 
   return (
