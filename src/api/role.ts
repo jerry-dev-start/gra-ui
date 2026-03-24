@@ -36,3 +36,4 @@ export function getRoleMenuIds(roleId: string) {
 export function saveRoleMenus(roleId: string, menuIds: string[]) {
   return request.put<null>(`/roles/${roleId}/menus`, { menuIds })
 }
+

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Col, Form, Input, Row, Select, Space, Table, Tag, message } from 'antd'
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Form, Input, Popconfirm, Row, Select, Space, Table, Tag, message } from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import { getApiManagerList } from '@/api/apiManager'
-import type { ApiManagerPageResult, ApiManagerQuery, ApiManagerRecord, ApiMethod, ApiStatus } from '@/types/api'
+import { createApi, deleteApi, getApiDetail, getApiManagerList, updateApi } from '@/api/apiManager'
+import type { ApiManagerFormValues, ApiManagerPageResult, ApiManagerQuery, ApiManagerRecord, ApiMethod, ApiStatus } from '@/types/api'
+import ApiManagerModal from './components/ApiManagerModal'
 
 const methodOptions: { label: ApiMethod; value: ApiMethod }[] = [
   { label: 'GET', value: 'GET' },
@@ -23,7 +24,7 @@ const methodTagMap: Record<ApiMethod, { color: string }> = {
 
 const statusTagMap: Record<ApiStatus, { label: string; color: string }> = {
   1: { label: '启用', color: 'green' },
-  0: { label: '禁用', color: 'red' },
+  2: { label: '禁用', color: 'red' },
 }
 
 function formatDateTime(value?: string) {
@@ -43,6 +44,10 @@ function ApiManager() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editRecord, setEditRecord] = useState<ApiManagerRecord | null>(null)
+  const [editLoadingId, setEditLoadingId] = useState<string>('')
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string>('')
 
   const fetchData = async (currentPage = page, currentPageSize = pageSize) => {
     setLoading(true)
@@ -88,6 +93,57 @@ function ApiManager() {
     fetchData(currentPage, currentPageSize)
   }
 
+  const handleAdd = () => {
+    setEditRecord(null)
+    setModalOpen(true)
+  }
+
+  const handleEdit = async (id: string) => {
+    setEditLoadingId(id)
+    try {
+      const detail = await getApiDetail(id)
+      setEditRecord(detail)
+      setModalOpen(true)
+    } catch {
+      message.error('加载接口详情失败')
+    } finally {
+      setEditLoadingId('')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    setDeleteLoadingId(id)
+    try {
+      await deleteApi(id)
+      message.success('删除成功')
+      const nextPage = dataSource.length === 1 && page > 1 ? page - 1 : page
+      if (nextPage !== page) {
+        setPage(nextPage)
+      }
+      await fetchData(nextPage, pageSize)
+    } catch {
+      message.error('删除失败')
+    } finally {
+      setDeleteLoadingId('')
+    }
+  }
+
+  const handleSubmit = async (values: ApiManagerFormValues) => {
+    try {
+      if (editRecord) {
+        await updateApi({ id: editRecord.id, ...values })
+        message.success('更新成功')
+      } else {
+        await createApi(values)
+        message.success('创建成功')
+      }
+      setModalOpen(false)
+      await fetchData(page, pageSize)
+    } catch {
+      // 无操作
+    }
+  }
+
   const columns = useMemo<ColumnsType<ApiManagerRecord>>(() => [
     {
       title: '接口地址',
@@ -114,12 +170,19 @@ function ApiManager() {
       render: (value?: string) => value || '-',
     },
     {
+      title: '授权码',
+      dataIndex: 'permissionCode',
+      width: 220,
+      ellipsis: true,
+      render: (value?: string) => value || '-',
+    },
+    {
       title: '接口状态',
       dataIndex: 'status',
       width: 110,
       align: 'center',
       render: (value?: ApiStatus) => {
-        if (value !== 0 && value !== 1) return '-'
+        if (value !== 2 && value !== 1) return '-'
         const tag = statusTagMap[value]
         return <Tag color={tag.color}>{tag.label}</Tag>
       },
@@ -130,7 +193,35 @@ function ApiManager() {
       width: 180,
       render: (value?: string) => formatDateTime(value),
     },
-  ], [])
+    {
+      title: '操作',
+      key: 'action',
+      width: 160,
+      align: 'center',
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            loading={editLoadingId === record.id}
+            onClick={() => handleEdit(record.id)}
+          >
+            编辑
+          </Button>
+          <Popconfirm title="确定删除该接口？" onConfirm={() => handleDelete(record.id)}>
+            <Button
+              type="link"
+              size="small"
+              danger
+              loading={deleteLoadingId === record.id}
+            >
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ], [deleteLoadingId, editLoadingId])
 
   return (
     <>
@@ -184,14 +275,21 @@ function ApiManager() {
         </Form>
       </Card>
 
-      <Card title="接口管理">
+      <Card
+        title="接口管理"
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            新增 API
+          </Button>
+        }
+      >
         <Table<ApiManagerRecord>
           rowKey="id"
           columns={columns}
           dataSource={dataSource}
           loading={loading}
           size="middle"
-          scroll={{ x: 920 }}
+          scroll={{ x: 1140 }}
           pagination={{
             current: page,
             pageSize,
@@ -203,6 +301,13 @@ function ApiManager() {
           }}
         />
       </Card>
+
+      <ApiManagerModal
+        open={modalOpen}
+        editRecord={editRecord}
+        onOk={handleSubmit}
+        onCancel={() => setModalOpen(false)}
+      />
     </>
   )
 }
