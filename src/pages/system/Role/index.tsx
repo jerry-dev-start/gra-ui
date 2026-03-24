@@ -9,9 +9,9 @@ import {
   SettingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { RoleRecord, RoleParams } from '@/types/role'
-import { getRoleList, createRole, updateRole, deleteRole } from '@/api/role'
-import PermissionDrawer from './PermissionDrawer'
+import type { RoleRecord, RoleParams } from '@/types/role.ts'
+import { getRoleList, createRole, updateRole, deleteRole } from '@/api/role.ts'
+import PermissionDrawer from './PermissionDrawer.tsx'
 
 function RolePage() {
   const [loading, setLoading] = useState(false)

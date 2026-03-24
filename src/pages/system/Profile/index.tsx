@@ -13,7 +13,7 @@ import {
   DesktopOutlined,
   CalendarOutlined,
 } from '@ant-design/icons'
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '@/stores/user.ts'
 import './index.css'
 
 /* ── 模拟数据（后续可对接真实接口） ── */

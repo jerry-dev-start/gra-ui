@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../../utils/auth'
-import { login } from '../../api/auth'
+import { useAuthStore } from '../../../utils/auth.ts'
+import { login } from '../../../api/auth.ts'
 import './index.css'
 
 function Login() {

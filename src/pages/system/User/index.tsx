@@ -10,12 +10,12 @@ import {
   ApartmentOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { User, UserParams } from '@/types/user'
-import type { RoleRecord } from '@/types/role'
-import type { DeptRecord } from '@/types/dept'
-import { getUserList, getUserDetail, createUser, updateUser, deleteUser } from '@/api/user'
-import { getAllRoles } from '@/api/role'
-import { getDeptTree } from '@/api/dept'
+import type { User, UserParams } from '@/types/user.ts'
+import type { RoleRecord } from '@/types/role.ts'
+import type { DeptRecord } from '@/types/dept.ts'
+import { getUserList, getUserDetail, createUser, updateUser, deleteUser } from '@/api/user.ts'
+import { getAllRoles } from '@/api/role.ts'
+import { getDeptTree } from '@/api/dept.ts'
 
 /** 将部门树转为 antd Tree 需要的 DataNode 格式 */
 function toTreeData(list: DeptRecord[]): TreeProps['treeData'] {

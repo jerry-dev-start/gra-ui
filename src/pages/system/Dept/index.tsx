@@ -6,10 +6,10 @@ import {
   ExpandAltOutlined, ShrinkOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { DeptRecord, DeptQuery, DeptParams } from '@/types/dept'
-import { getDeptTree, createDept, updateDept, deleteDept } from '@/api/dept'
-import DeptSearch from './components/DeptSearch'
-import DeptModal from './components/DeptModal'
+import type { DeptRecord, DeptQuery, DeptParams } from '@/types/dept.ts'
+import { getDeptTree, createDept, updateDept, deleteDept } from '@/api/dept.ts'
+import DeptSearch from './components/DeptSearch.tsx'
+import DeptModal from './components/DeptModal.tsx'
 
 /** 收集树中所有 key */
 function collectKeys(tree: DeptRecord[]): string[] {

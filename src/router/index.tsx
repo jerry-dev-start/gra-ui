@@ -3,10 +3,10 @@ import type { RouteObject } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { Spin } from 'antd'
 import Layout from '../layouts'
-import Login from '../pages/Login'
+import Login from '../pages/system/Login'
 import { GuestOnly } from '../components/AuthGuard'
 
-const ProfilePage = lazy(() => import('../pages/Profile'))
+const ProfilePage = lazy(() => import('../pages/system/Profile'))
 const profileRoute: RouteObject = {
   path: 'profile',
   element: (

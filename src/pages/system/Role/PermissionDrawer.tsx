@@ -5,10 +5,10 @@ import {
   MenuOutlined, KeyOutlined,
 } from '@ant-design/icons'
 import type { TreeDataNode } from 'antd'
-import type { MenuRecord } from '@/types/menu'
-import type { RoleRecord } from '@/types/role'
-import { getAllMenuTree } from '@/api/menu'
-import { getRoleMenuIds, saveRoleMenus } from '@/api/role'
+import type { MenuRecord } from '@/types/menu.ts'
+import type { RoleRecord } from '@/types/role.ts'
+import { getAllMenuTree } from '@/api/menu.ts'
+import { getRoleMenuIds, saveRoleMenus } from '@/api/role.ts'
 
 interface Props {
   open: boolean

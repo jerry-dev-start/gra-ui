@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Modal, Form, Input, InputNumber, Select, TreeSelect } from 'antd'
-import type { DeptRecord, DeptParams } from '@/types/dept'
+import type { DeptRecord, DeptParams } from '@/types/dept.ts'
 import {getDeptInfo} from '@/api/dept.ts'
 
 interface DeptModalProps {

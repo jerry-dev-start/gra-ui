@@ -10,8 +10,8 @@ import {
 import * as Icons from '@ant-design/icons'
 import IconPicker from '@/components/IconPicker'
 import type { ColumnsType } from 'antd/es/table'
-import type { MenuRecord, MenuParams, MenuType } from '@/types/menu'
-import { getAllMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu'
+import type { MenuRecord, MenuParams, MenuType } from '@/types/menu.ts'
+import { getAllMenuTree, createMenu, updateMenu, deleteMenu } from '@/api/menu.ts'
 
 const menuTypeMap: Record<MenuType, { label: string; color: string; icon: React.ReactNode }> = {
   directory: { label: '目录', color: 'blue', icon: <FolderOutlined /> },

@@ -1,6 +1,6 @@
 import { Form, Input, Select, Button, Space, Row, Col } from 'antd'
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
-import type { DeptQuery } from '@/types/dept'
+import type { DeptQuery } from '@/types/dept.ts'
 
 interface DeptSearchProps {
   onSearch: (values: DeptQuery) => void
