@@ -163,10 +163,8 @@ async function chunkUpload(
       })
     })
 
-  console.log("111111")
   // 4. 并发上传
   await concurrentRun(tasks, concurrency)
-  console.log("222222")
   // 5. 合并分片
   const mergeResult = await mergeChunks(hash, file.name, totalChunks)
   onProgress?.(100)
