@@ -179,9 +179,12 @@ function RolePage() {
           <Button type="link" size="small" icon={<SettingOutlined />} onClick={() => handlePerm(record)}>
             权限
           </Button>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
+          {!record.isReadonly && (
+              <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+                编辑
+              </Button>
+          )}
+
           {!record.isReadonly && (
             <Popconfirm title="确定删除该角色？" onConfirm={() => handleDelete(record.id)}>
               <Button type="link" size="small" danger icon={<DeleteOutlined />}>
