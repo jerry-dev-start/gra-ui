@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { Avatar, Card, Tag, theme, Tooltip } from 'antd'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, Avatar, Button, Card, Form, Input, Modal, Spin, Tag, message, theme } from 'antd'
 import {
   UserOutlined,
   MailOutlined,
@@ -10,24 +10,60 @@ import {
   KeyOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  DesktopOutlined,
   CalendarOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import { useUserStore } from '@/stores/user.ts'
+import { getCurrUserInfo } from '@/api/user.ts'
+import type { CurrentUserInfo } from '@/types/user.ts'
 import './index.css'
 
-/* ── 模拟数据（后续可对接真实接口） ── */
+const roleTagColors = ['#00c2ff', '#7b61ff', '#36cfc9', '#f759ab', '#faad14']
 
-const loginLogs = [
-  { ip: '192.168.1.100', device: 'Chrome / Windows', time: '2026-03-18 09:32', color: '#00c2ff' },
-  { ip: '192.168.1.100', device: 'Chrome / Windows', time: '2026-03-17 14:15', color: '#36cfc9' },
-  { ip: '10.0.0.52', device: 'Safari / macOS', time: '2026-03-16 08:47', color: '#7b61ff' },
-  { ip: '192.168.1.100', device: 'Chrome / Windows', time: '2026-03-15 10:03', color: '#f759ab' },
-]
+function formatDateTime(value?: string) {
+  if (!value) return '--'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  const pad = (num: number) => String(num).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
 
 function Profile() {
   const { user } = useUserStore()
   const { token: t } = theme.useToken()
+  const [profile, setProfile] = useState<CurrentUserInfo | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false)
+  const [sendingCode, setSendingCode] = useState(false)
+  const [passwordForm] = Form.useForm<{ email: string; verifyCode: string; newPassword: string; confirmPassword: string }>()
+
+  const loadProfile = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const data = await getCurrUserInfo()
+      setProfile(data)
+    } catch {
+      setError('加载个人信息失败，请稍后重试')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadProfile()
+  }, [loadProfile])
+
+  const roleNames = useMemo(() => profile?.roleName ?? [], [profile?.roleName])
+  const roleCount = profile?.roleCount ?? roleNames.length
+  const displayName = profile?.nickname || profile?.username || user?.nickname || user?.username || '--'
+  const lastLoginText = formatDateTime(profile?.lastLoginDate)
+  const lastLoginDateOnly = lastLoginText === '--' ? '--' : lastLoginText.split(' ')[0]
 
   const statusTag = useMemo(() => {
     if (user?.status === 1) return <Tag color="success" bordered={false}>正常</Tag>
@@ -35,218 +71,334 @@ function Profile() {
     return <Tag bordered={false}>未知</Tag>
   }, [user?.status])
 
-  const roleCount = user?.roleIds?.length ?? 0
+  const handleOpenPasswordModal = () => {
+    passwordForm.resetFields()
+    passwordForm.setFieldValue('email', profile?.email || '')
+    setPasswordModalOpen(true)
+  }
+
+  const handleCancelPasswordModal = () => {
+    setPasswordModalOpen(false)
+    passwordForm.resetFields()
+  }
+
+  const handleSendVerifyCode = async () => {
+    try {
+      const email = passwordForm.getFieldValue('email') || profile?.email
+      if (!email) {
+        message.warning('请先填写邮箱地址')
+        return
+      }
+
+      setSendingCode(true)
+      message.info('邮箱验证码接口待接入')
+    } finally {
+      setSendingCode(false)
+    }
+  }
+
+  const handlePasswordSubmit = async () => {
+    try {
+      const values = await passwordForm.validateFields()
+      setPasswordSubmitting(true)
+
+      if (values.verifyCode.trim().length < 4) {
+        message.warning('请输入正确的邮箱验证码')
+        return
+      }
+
+      message.info('邮箱验证码修改密码接口待接入')
+      setPasswordModalOpen(false)
+      passwordForm.resetFields()
+    } finally {
+      setPasswordSubmitting(false)
+    }
+  }
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto' }}>
-      {/* ── 顶部卡片：Banner + 头像 + 统计 ── */}
-      <Card
-        bodyStyle={{ padding: 0 }}
-        style={{ borderRadius: 12, overflow: 'hidden' }}
+      {error && (
+        <Alert
+          type="error"
+          showIcon
+          message={error}
+          action={
+            <Button size="small" type="text" icon={<ReloadOutlined />} onClick={() => void loadProfile()}>
+              重试
+            </Button>
+          }
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      <Spin spinning={loading} tip="加载个人信息中...">
+        <Card
+          bodyStyle={{ padding: 0 }}
+          style={{ borderRadius: 12, overflow: 'hidden' }}
+        >
+          <div className="profile-banner">
+            <div className="profile-banner-pattern" />
+          </div>
+
+          <div
+            className="profile-avatar-section"
+            style={{ '--avatar-border': t.colorBgContainer } as React.CSSProperties}
+          >
+            <div className="profile-avatar-wrapper">
+              <Avatar
+                size={96}
+                src={user?.avatar || undefined}
+                icon={!user?.avatar && <UserOutlined />}
+                style={{
+                  background: !user?.avatar
+                    ? 'linear-gradient(135deg, #00c2ff, #7b61ff)'
+                    : undefined,
+                  fontSize: 36,
+                }}
+              >
+                {!user?.avatar && (displayName.charAt(0) || '?')}
+              </Avatar>
+            </div>
+            <div className="profile-user-brief">
+              <div className="profile-user-name" style={{ color: t.colorText }}>
+                {displayName}
+              </div>
+              <div className="profile-user-role-tag">
+                {statusTag}
+                <Tag bordered={false} color="processing">{roleCount} 个角色</Tag>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="profile-stats"
+            style={{ '--stat-divider': t.colorBorderSecondary } as React.CSSProperties}
+          >
+            <div className="profile-stat-item">
+              <div className="profile-stat-value" style={{ color: '#00c2ff' }}>
+                {roleCount}
+              </div>
+              <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
+                角色
+              </div>
+            </div>
+            <div className="profile-stat-item">
+              <div className="profile-stat-value" style={{ color: '#7b61ff' }}>
+                {profile?.username || '--'}
+              </div>
+              <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
+                用户名
+              </div>
+            </div>
+            <div className="profile-stat-item">
+              <div className="profile-stat-value" style={{ color: '#36cfc9' }}>
+                {profile?.lastLoginDate ? '已登录' : '--'}
+              </div>
+              <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
+                当前状态
+              </div>
+            </div>
+            <div className="profile-stat-item">
+              <div className="profile-stat-value" style={{ color: '#f759ab' }}>
+                {lastLoginDateOnly}
+              </div>
+              <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
+                最后登录
+              </div>
+            </div>
+          </div>
+
+          <div style={{ height: 16 }} />
+        </Card>
+
+        <div className="profile-grid" style={{ marginTop: 16 }}>
+          <Card
+            title={<span><IdcardOutlined style={{ marginRight: 8, color: '#00c2ff' }} />基本信息</span>}
+            style={{ borderRadius: 12 }}
+          >
+            <InfoItem
+              icon={<UserOutlined />}
+              color="#00c2ff"
+              label="用户名"
+              value={profile?.username}
+            />
+            <InfoItem
+              icon={<IdcardOutlined />}
+              color="#7b61ff"
+              label="昵称"
+              value={profile?.nickname}
+            />
+            <InfoItem
+              icon={<MailOutlined />}
+              color="#36cfc9"
+              label="邮箱"
+              value={profile?.email}
+            />
+            <InfoItem
+              icon={<PhoneOutlined />}
+              color="#f759ab"
+              label="手机号"
+              value={profile?.phone}
+            />
+            <InfoItem
+              icon={<CalendarOutlined />}
+              color="#faad14"
+              label="最后登录"
+              value={lastLoginText}
+            />
+          </Card>
+
+          <Card
+            title={<span><SafetyOutlined style={{ marginRight: 8, color: '#7b61ff' }} />安全设置</span>}
+            style={{ borderRadius: 12 }}
+          >
+            <SecurityItem
+              icon={<LockOutlined />}
+              color="#00c2ff"
+              label="登录密码"
+              desc="已设置"
+              status="set"
+              actionText="修改密码"
+              onAction={handleOpenPasswordModal}
+            />
+            <SecurityItem
+              icon={<MailOutlined />}
+              color="#36cfc9"
+              label="邮箱绑定"
+              desc={profile?.email || '未绑定'}
+              status={profile?.email ? 'set' : 'unset'}
+            />
+            <SecurityItem
+              icon={<PhoneOutlined />}
+              color="#f759ab"
+              label="手机绑定"
+              desc={profile?.phone || '未绑定'}
+              status={profile?.phone ? 'set' : 'unset'}
+            />
+            <SecurityItem
+              icon={<KeyOutlined />}
+              color="#faad14"
+              label="两步验证"
+              desc="未开启"
+              status="unset"
+            />
+          </Card>
+
+          <Card
+            title={<span><ClockCircleOutlined style={{ marginRight: 8, color: '#36cfc9' }} />登录信息</span>}
+            style={{ borderRadius: 12 }}
+          >
+            <InfoItem
+              icon={<CalendarOutlined />}
+              color="#36cfc9"
+              label="最近登录时间"
+              value={lastLoginText}
+            />
+            <InfoItem
+              icon={<UserOutlined />}
+              color="#7b61ff"
+              label="登录账号"
+              value={profile?.username}
+            />
+          </Card>
+
+          <Card
+            title={<span><SafetyOutlined style={{ marginRight: 8, color: '#f759ab' }} />角色权限</span>}
+            style={{ borderRadius: 12 }}
+          >
+            {roleNames.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {roleNames.map((roleName, idx) => (
+                  <Tag
+                    key={roleName}
+                    color={roleTagColors[idx % roleTagColors.length]}
+                    style={{ padding: '4px 12px', fontSize: 13, borderRadius: 6 }}
+                  >
+                    {roleName}
+                  </Tag>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: t.colorTextSecondary, textAlign: 'center', padding: 24 }}>
+                暂无分配角色
+              </div>
+            )}
+          </Card>
+        </div>
+      </Spin>
+
+      <Modal
+        title="修改密码"
+        open={passwordModalOpen}
+        onCancel={handleCancelPasswordModal}
+        onOk={() => void handlePasswordSubmit()}
+        confirmLoading={passwordSubmitting}
+        okText="确认修改"
+        cancelText="取消"
+        destroyOnClose
       >
-        {/* Banner */}
-        <div className="profile-banner">
-          <div className="profile-banner-pattern" />
-        </div>
-
-        {/* 头像 + 姓名 */}
-        <div
-          className="profile-avatar-section"
-          style={{ '--avatar-border': t.colorBgContainer } as React.CSSProperties}
-        >
-          <div className="profile-avatar-wrapper">
-            <Avatar
-              size={96}
-              src={user?.avatar || undefined}
-              icon={!user?.avatar && <UserOutlined />}
-              style={{
-                background: !user?.avatar
-                  ? 'linear-gradient(135deg, #00c2ff, #7b61ff)'
-                  : undefined,
-                fontSize: 36,
-              }}
-            >
-              {!user?.avatar && (user?.nickname?.charAt(0) || user?.username?.charAt(0) || '?')}
-            </Avatar>
-          </div>
-          <div className="profile-user-brief">
-            <div className="profile-user-name" style={{ color: t.colorText }}>
-              {user?.nickname || user?.username || '--'}
-            </div>
-            <div className="profile-user-role-tag">
-              {statusTag}
-              <Tag bordered={false} color="processing">{roleCount} 个角色</Tag>
-            </div>
-          </div>
-        </div>
-
-        {/* 统计条 */}
-        <div
-          className="profile-stats"
-          style={{ '--stat-divider': t.colorBorderSecondary } as React.CSSProperties}
-        >
-          <div className="profile-stat-item">
-            <div className="profile-stat-value" style={{ color: '#00c2ff' }}>
-              {roleCount}
-            </div>
-            <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
-              角色
-            </div>
-          </div>
-          <div className="profile-stat-item">
-            <div className="profile-stat-value" style={{ color: '#7b61ff' }}>
-              {loginLogs.length}
-            </div>
-            <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
-              近期登录
-            </div>
-          </div>
-          <div className="profile-stat-item">
-            <div className="profile-stat-value" style={{ color: '#36cfc9' }}>
-              {user?.lastLoginDate ? '在线' : '--'}
-            </div>
-            <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
-              当前状态
-            </div>
-          </div>
-          <div className="profile-stat-item">
-            <div className="profile-stat-value" style={{ color: '#f759ab' }}>
-              {user?.lastLoginDate?.split(' ')[0] || '--'}
-            </div>
-            <div className="profile-stat-label" style={{ color: t.colorTextSecondary }}>
-              最后登录
-            </div>
-          </div>
-        </div>
-
-        <div style={{ height: 16 }} />
-      </Card>
-
-      {/* ── 信息卡片网格 ── */}
-      <div className="profile-grid">
-        {/* 基本信息 */}
-        <Card
-          title={<span><IdcardOutlined style={{ marginRight: 8, color: '#00c2ff' }} />基本信息</span>}
-          style={{ borderRadius: 12 }}
-        >
-          <InfoItem
-            icon={<UserOutlined />}
-            color="#00c2ff"
-            label="用户名"
-            value={user?.username}
-          />
-          <InfoItem
-            icon={<IdcardOutlined />}
-            color="#7b61ff"
-            label="昵称"
-            value={user?.nickname}
-          />
-          <InfoItem
-            icon={<MailOutlined />}
-            color="#36cfc9"
+        <Form form={passwordForm} layout="vertical" preserve={false}>
+          <Form.Item
             label="邮箱"
-            value={user?.email}
-          />
-          <InfoItem
-            icon={<PhoneOutlined />}
-            color="#f759ab"
-            label="手机号"
-            value={user?.phoneNumber}
-          />
-          <InfoItem
-            icon={<CalendarOutlined />}
-            color="#faad14"
-            label="最后登录"
-            value={user?.lastLoginDate}
-          />
-        </Card>
-
-        {/* 安全设置 */}
-        <Card
-          title={<span><SafetyOutlined style={{ marginRight: 8, color: '#7b61ff' }} />安全设置</span>}
-          style={{ borderRadius: 12 }}
-        >
-          <SecurityItem
-            icon={<LockOutlined />}
-            color="#00c2ff"
-            label="登录密码"
-            desc="已设置"
-            status="set"
-          />
-          <SecurityItem
-            icon={<MailOutlined />}
-            color="#36cfc9"
-            label="邮箱绑定"
-            desc={user?.email || '未绑定'}
-            status={user?.email ? 'set' : 'unset'}
-          />
-          <SecurityItem
-            icon={<PhoneOutlined />}
-            color="#f759ab"
-            label="手机绑定"
-            desc={user?.phoneNumber || '未绑定'}
-            status={user?.phoneNumber ? 'set' : 'unset'}
-          />
-          <SecurityItem
-            icon={<KeyOutlined />}
-            color="#faad14"
-            label="两步验证"
-            desc="未开启"
-            status="unset"
-          />
-        </Card>
-
-        {/* 登录日志 */}
-        <Card
-          title={<span><ClockCircleOutlined style={{ marginRight: 8, color: '#36cfc9' }} />登录日志</span>}
-          style={{ borderRadius: 12 }}
-        >
-          {loginLogs.map((log, idx) => (
-            <div className="profile-log-item" key={idx}>
-              <div className="profile-log-dot" style={{ background: log.color }} />
-              <Tooltip title={log.ip}>
-                <span className="profile-log-text" style={{ color: t.colorText }}>
-                  <DesktopOutlined style={{ marginRight: 6, opacity: 0.5 }} />
-                  {log.device}
-                  <span style={{ opacity: 0.45, marginLeft: 8 }}>{log.ip}</span>
-                </span>
-              </Tooltip>
-              <span className="profile-log-time" style={{ color: t.colorTextSecondary }}>
-                {log.time}
-              </span>
-            </div>
-          ))}
-        </Card>
-
-        {/* 角色权限 */}
-        <Card
-          title={<span><SafetyOutlined style={{ marginRight: 8, color: '#f759ab' }} />角色权限</span>}
-          style={{ borderRadius: 12 }}
-        >
-          {roleCount > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {user?.roleIds?.map((id, idx) => (
-                <Tag
-                  key={id}
-                  color={['#00c2ff', '#7b61ff', '#36cfc9', '#f759ab', '#faad14'][idx % 5]}
-                  style={{ padding: '4px 12px', fontSize: 13, borderRadius: 6 }}
-                >
-                  角色 ID: {id}
-                </Tag>
-              ))}
-            </div>
-          ) : (
-            <div style={{ color: t.colorTextSecondary, textAlign: 'center', padding: 24 }}>
-              暂无分配角色
-            </div>
-          )}
-        </Card>
-      </div>
+            name="email"
+            initialValue={profile?.email || ''}
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '请输入正确的邮箱地址' },
+            ]}
+          >
+            <Input placeholder="请输入邮箱" />
+          </Form.Item>
+          <Form.Item
+            label="邮箱验证码"
+            required
+          >
+            <Input.Group compact>
+              <Form.Item
+                name="verifyCode"
+                noStyle
+                rules={[{ required: true, message: '请输入邮箱验证码' }]}
+              >
+                <Input style={{ width: 'calc(100% - 120px)' }} placeholder="请输入邮箱验证码" />
+              </Form.Item>
+              <Button style={{ width: 120 }} loading={sendingCode} onClick={() => void handleSendVerifyCode()}>
+                发送验证码
+              </Button>
+            </Input.Group>
+          </Form.Item>
+          <Form.Item
+            label="新密码"
+            name="newPassword"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '新密码至少 6 位' },
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            label="确认新密码"
+            name="confirmPassword"
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: '请再次输入新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error('两次输入的新密码不一致'))
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }
-
-/* ── 子组件 ── */
 
 function InfoItem({ icon, color, label, value }: {
   icon: React.ReactNode
@@ -270,12 +422,14 @@ function InfoItem({ icon, color, label, value }: {
   )
 }
 
-function SecurityItem({ icon, color, label, desc, status }: {
+function SecurityItem({ icon, color, label, desc, status, actionText, onAction }: {
   icon: React.ReactNode
   color: string
   label: string
   desc: string
   status: 'set' | 'unset'
+  actionText?: string
+  onAction?: () => void
 }) {
   return (
     <div className="profile-security-item">
@@ -291,10 +445,17 @@ function SecurityItem({ icon, color, label, desc, status }: {
           <div className="profile-info-value">{desc}</div>
         </div>
       </div>
-      {status === 'set'
-        ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 16 }} />
-        : <Tag color="warning" bordered={false}>未设置</Tag>
-      }
+      <div className="profile-security-right">
+        {actionText && onAction && (
+          <Button type="link" className="profile-security-action" onClick={onAction}>
+            {actionText}
+          </Button>
+        )}
+        {status === 'set'
+          ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+          : <Tag color="warning" bordered={false}>未设置</Tag>
+        }
+      </div>
     </div>
   )
 }

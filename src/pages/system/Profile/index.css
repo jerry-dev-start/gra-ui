@@ -176,7 +176,17 @@
   flex-shrink: 0;
 }
 
-/* --- 登录日志 --- */
+.profile-security-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.profile-security-action {
+  padding-inline: 0;
+}
+
 .profile-log-item {
   display: flex;
   align-items: center;

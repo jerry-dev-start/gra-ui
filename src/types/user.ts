@@ -31,6 +31,17 @@ export interface User {
   roleIds?: string[];
 }
 
+/** 当前登录用户资料 */
+export interface CurrentUserInfo {
+  nickname?: string
+  phone?: string
+  email?: string
+  username: string
+  lastLoginDate?: string
+  roleCount?: number
+  roleName?: string[]
+}
+
 /** 用户列表查询参数 */
 export interface UserQuery {
   username?: string

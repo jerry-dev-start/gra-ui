@@ -1,5 +1,10 @@
 import request from '@/utils/request'
-import type { User, UserQuery, UserPageResult, UserParams } from '@/types/user'
+import type { CurrentUserInfo, User, UserQuery, UserPageResult, UserParams } from '@/types/user'
+
+/** 获取当前登录用户资料 */
+export function getCurrUserInfo() {
+  return request.get<CurrentUserInfo>('/users/getCurrUserInfo')
+}
 
 /** 获取用户列表（分页） */
 export function getUserList(params: UserQuery) {
