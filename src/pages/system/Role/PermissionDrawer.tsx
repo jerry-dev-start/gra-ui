@@ -92,14 +92,6 @@ function collectCheckedApiPermissionCodes(groups: ApiPermissionTreeGroup[], chec
     .map((api) => String(api.permissionCode)))
 }
 
-function collectApiCheckedLeafKeysByPermissionCodes(groups: ApiPermissionTreeGroup[], permissionCodes: string[]): string[] {
-  const permissionCodeSet = new Set(permissionCodes)
-
-  return groups.flatMap((group) => (group.children ?? [])
-    .filter((api) => api.permissionCode && permissionCodeSet.has(String(api.permissionCode)))
-    .map((api) => String(api.id)))
-}
-
 function toApiTreeData(
   groups: ApiPermissionTreeGroup[],
   colorText: string,
@@ -170,7 +162,8 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!open || !role) return
     setLoading(true)
-    Promise.all([getAllMenuTree(), getRoleMenuIds(role.id)])
+
+    Promise.all([getAllMenuTree(),getRoleMenuIds(role.id)])
       .then(([tree, ids]) => {
         const nextTree = tree ?? []
         const nextParentKeys = collectParentKeys(nextTree)
@@ -212,15 +205,16 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     if (!open || !role || activeTab !== 'api' || apiLoaded) return
 
     setApiLoading(true)
-    Promise.all([getApiPermissionTree(), getRoleApiPermissions(role.id)])
+    Promise.all([getApiPermissionTree(),getRoleApiPermissions(role.id)])
       .then(([tree, apiPers]) => {
 
         const nextTree = tree ?? []
         console.log(apiPers)
-        const nextCheckedKeys = collectApiCheckedLeafKeysByPermissionCodes(nextTree, apiPers?.apiPers ?? [])
+        // const nextCheckedKeys = collectApiCheckedLeafKeysByPermissionCodes(nextTree, apiPers?.apiPers ?? [])
+
         setApiTree(nextTree)
         setApiExpandedKeys(collectApiParentKeys(nextTree))
-        setApiCheckedKeys(nextCheckedKeys)
+        setApiCheckedKeys(apiPers.apiPers ?? [])
         setApiHalfCheckedKeys([])
       })
       .catch((e) => {
@@ -271,16 +265,20 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
   }
 
   const handleApiCheck = (checked: unknown, info: { halfCheckedKeys?: Key[] }) => {
+
     const keys = Array.isArray(checked) ? checked : (checked as { checked: Key[] }).checked
     const checkedNodeIds = keys.map(String)
+
     const leafSet = new Set(apiLeafKeys)
+
     const newChecked = checkedNodeIds.filter((key) => leafSet.has(key))
     const newHalf = (info.halfCheckedKeys ?? []).map(String).filter((key) => key.startsWith('group:'))
-    const apiPers = collectCheckedApiPermissionCodes(apiTree, newChecked)
+
+    // const apiPers = collectCheckedApiPermissionCodes(apiTree, newChecked)
 
     setApiCheckedKeys(newChecked)
     setApiHalfCheckedKeys(newHalf)
-    void autoSaveApiPermissions(apiPers)
+    void autoSaveApiPermissions(newChecked)
   }
 
   const handleCheckAll = () => {

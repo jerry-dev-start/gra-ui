@@ -41,10 +41,13 @@ export function saveRoleMenus(roleId: string, menuIds: string[]) {
 
 /** 获取角色已分配的接口权限授权码列表 */
 export function getRoleApiPermissions(roleId: string) {
-  return request.get<RoleApiSelectRes>(`/roleapi/${roleId}`)
+  return request.get<RoleApiSelectRes>(`/casbin/${roleId}`)
 }
 
 /** 保存角色的接口权限 */
 export function saveRoleApiPermissions(roleId: string, apiPers: string[]) {
-  return request.post<null>('/roleapi', { roleId, apiPers })
+  return request.post<null>('/casbin', {
+    "roleId":roleId,
+    "permissionIds": apiPers
+  })
 }
