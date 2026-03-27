@@ -1,6 +1,8 @@
 /** 角色状态：1 启用 / 0 禁用 */
 export type RoleStatus = 0 | 1
-
+export interface  RoleApiSelectRes  {
+  apiPers: string[]
+}
 /** 角色记录 */
 export interface RoleRecord {
   id: string

@@ -10,7 +10,7 @@ import {
 import type { TreeDataNode } from 'antd'
 import { getApiPermissionTree } from '@/api/apiManager'
 import { getAllMenuTree } from '@/api/menu.ts'
-import { getRoleMenuIds, saveRoleMenus } from '@/api/role.ts'
+import { getRoleApiPermissions, getRoleMenuIds, saveRoleApiPermissions, saveRoleMenus } from '@/api/role.ts'
 import type { ApiMethod, ApiPermissionTreeGroup, ApiPermissionTreeLeaf } from '@/types/api'
 import type { MenuRecord } from '@/types/menu.ts'
 import type { RoleRecord } from '@/types/role.ts'
@@ -21,8 +21,6 @@ interface Props {
   onClose: () => void
   onSaved?: () => void
 }
-
-const API_PERMISSION_SUPPORTED = false
 
 const typeIconMap: Record<string, ReactNode> = {
   directory: <FolderOutlined style={{ marginRight: 4 }} />,
@@ -85,6 +83,21 @@ function collectApiParentKeys(groups: ApiPermissionTreeGroup[]): string[] {
 
 function collectApiLeafKeys(groups: ApiPermissionTreeGroup[]): string[] {
   return groups.flatMap((group) => (group.children ?? []).map((api) => String(api.id)))
+}
+
+function collectCheckedApiPermissionCodes(groups: ApiPermissionTreeGroup[], checkedLeafIds: string[]): string[] {
+  const checkedIdSet = new Set(checkedLeafIds)
+  return groups.flatMap((group) => (group.children ?? [])
+    .filter((api) => checkedIdSet.has(String(api.id)) && api.permissionCode)
+    .map((api) => String(api.permissionCode)))
+}
+
+function collectApiCheckedLeafKeysByPermissionCodes(groups: ApiPermissionTreeGroup[], permissionCodes: string[]): string[] {
+  const permissionCodeSet = new Set(permissionCodes)
+
+  return groups.flatMap((group) => (group.children ?? [])
+    .filter((api) => api.permissionCode && permissionCodeSet.has(String(api.permissionCode)))
+    .map((api) => String(api.id)))
 }
 
 function toApiTreeData(
@@ -199,15 +212,19 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     if (!open || !role || activeTab !== 'api' || apiLoaded) return
 
     setApiLoading(true)
-    getApiPermissionTree()
-      .then((tree) => {
+    Promise.all([getApiPermissionTree(), getRoleApiPermissions(role.id)])
+      .then(([tree, apiPers]) => {
+
         const nextTree = tree ?? []
+        console.log(apiPers)
+        const nextCheckedKeys = collectApiCheckedLeafKeysByPermissionCodes(nextTree, apiPers?.apiPers ?? [])
         setApiTree(nextTree)
         setApiExpandedKeys(collectApiParentKeys(nextTree))
-        setApiCheckedKeys([])
+        setApiCheckedKeys(nextCheckedKeys)
         setApiHalfCheckedKeys([])
       })
-      .catch(() => {
+      .catch((e) => {
+        console.log(e)
         message.error('加载接口权限数据失败')
         setApiTree([])
       })
@@ -229,14 +246,12 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     }
   }
 
-  const autoSaveApiPermissions = async (leafIds: string[]) => {
-    if (!API_PERMISSION_SUPPORTED || !role) {
-      void leafIds
-      return
-    }
+  const autoSaveApiPermissions = async (apiPers: string[]) => {
+    if (!role) return
 
     try {
       setApiSaving(true)
+      await saveRoleApiPermissions(role.id, apiPers)
       message.success('接口权限已保存')
       onSaved?.()
     } catch {
@@ -261,11 +276,11 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     const leafSet = new Set(apiLeafKeys)
     const newChecked = checkedNodeIds.filter((key) => leafSet.has(key))
     const newHalf = (info.halfCheckedKeys ?? []).map(String).filter((key) => key.startsWith('group:'))
+    const apiPers = collectCheckedApiPermissionCodes(apiTree, newChecked)
 
-    console.log('api checked node ids:', checkedNodeIds)
     setApiCheckedKeys(newChecked)
     setApiHalfCheckedKeys(newHalf)
-    void autoSaveApiPermissions(newChecked)
+    void autoSaveApiPermissions(apiPers)
   }
 
   const handleCheckAll = () => {
@@ -290,7 +305,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     } else {
       setApiCheckedKeys(apiLeafKeys)
       setApiHalfCheckedKeys([])
-      void autoSaveApiPermissions(apiLeafKeys)
+      void autoSaveApiPermissions(collectCheckedApiPermissionCodes(apiTree, apiLeafKeys))
     }
   }
 

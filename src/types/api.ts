@@ -29,6 +29,7 @@ export interface ApiPermissionTreeLeaf {
   method: ApiMethod
   apiUrl?: string
   path?: string
+  permissionCode?: string
   desc?: string
 }
 

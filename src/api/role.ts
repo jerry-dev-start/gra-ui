@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { RoleQuery, RolePageResult, RoleParams, RoleRecord } from '@/types/role'
+import type {RoleQuery, RolePageResult, RoleParams, RoleRecord, RoleApiSelectRes} from '@/types/role'
 
 /** 获取角色列表（分页） */
 export function getRoleList(params: RoleQuery) {
@@ -37,3 +37,14 @@ export function saveRoleMenus(roleId: string, menuIds: string[]) {
   return request.put<null>(`/roles/${roleId}/menus`, { menuIds })
 }
 
+
+
+/** 获取角色已分配的接口权限授权码列表 */
+export function getRoleApiPermissions(roleId: string) {
+  return request.get<RoleApiSelectRes>(`/roleapi/${roleId}`)
+}
+
+/** 保存角色的接口权限 */
+export function saveRoleApiPermissions(roleId: string, apiPers: string[]) {
+  return request.post<null>('/roleapi', { roleId, apiPers })
+}
