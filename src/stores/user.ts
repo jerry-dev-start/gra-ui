@@ -5,6 +5,7 @@ import { removeToken } from '@/utils/auth'
 
 interface UserState {
   user: User | null
+  permissions: string[] | null
   loading: boolean
   /** 拉取用户信息 */
   fetchUser: () => Promise<void>
@@ -14,17 +15,18 @@ interface UserState {
 
 export const useUserStore = create<UserState>((set) => ({
   user: null,
+  permissions: null,
   loading: false,
   fetchUser: async () => {
     set({ loading: true })
     try {
       const data = await getUserInfo()
-      set({ user: data.userInfo, loading: false })
+      set({ user: data.userInfo,permissions: data.permissions, loading: false })
     } catch {
       // 拉取失败（token 过期/无效），清 token 让 App 层跳登录
       removeToken()
-      set({ user: null, loading: false })
+      set({ user: null,permissions: null, loading: false })
     }
   },
-  clearUser: () => set({ user: null }),
+  clearUser: () => set({ user: null,permissions: null }),
 }))

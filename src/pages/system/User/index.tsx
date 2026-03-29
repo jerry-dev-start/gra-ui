@@ -16,6 +16,7 @@ import type { DeptRecord } from '@/types/dept.ts'
 import { getUserList, getUserDetail, createUser, updateUser, deleteUser } from '@/api/user.ts'
 import { getAllRoles } from '@/api/role.ts'
 import { getDeptTree } from '@/api/dept.ts'
+import Access from "@/components/Access.tsx";
 
 /** 将部门树转为 antd Tree 需要的 DataNode 格式 */
 function toTreeData(list: DeptRecord[]): TreeProps['treeData'] {
@@ -344,9 +345,11 @@ function UserPage() {
                     已筛选部门
                   </Tag>
                 )}
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                  新增用户
-                </Button>
+                <Access code={"system:user:add"}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                    新增用户
+                  </Button>
+                </Access>
               </Space>
             }
           >

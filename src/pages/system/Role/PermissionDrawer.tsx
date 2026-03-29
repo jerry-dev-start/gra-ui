@@ -259,6 +259,7 @@ function PermissionDrawer({ open, role, onClose, onSaved }: Props) {
     const keys = Array.isArray(checked) ? checked : (checked as { checked: Key[] }).checked
     const newChecked = keys.map(String)
     const newHalf = (info.halfCheckedKeys ?? []).map(String)
+
     setCheckedKeys(newChecked)
     setHalfCheckedKeys(newHalf)
     autoSave(newChecked, newHalf)

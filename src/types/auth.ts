@@ -22,4 +22,5 @@ export interface RefreshResult {
 
 export interface UserAllInfo {
   userInfo: User
+  permissions: string[]
 }

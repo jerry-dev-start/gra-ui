@@ -176,6 +176,7 @@ function RolePage() {
       width: 220,
       render: (_, record) => (
         <Space size="small">
+
           <Button type="link" size="small" icon={<SettingOutlined />} onClick={() => handlePerm(record)}>
             权限
           </Button>
