@@ -34,7 +34,7 @@ export interface User {
 /** 当前登录用户资料 */
 export interface CurrentUserInfo {
   nickname?: string
-  phone?: string
+  phoneNumber?: string
   email?: string
   username: string
   lastLoginDate?: string

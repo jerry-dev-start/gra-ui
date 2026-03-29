@@ -14,7 +14,7 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons'
 import { useUserStore } from '@/stores/user.ts'
-import { getCurrUserInfo } from '@/api/user.ts'
+import {editPassword, getCurrUserInfo, sendEmilaCode} from '@/api/user.ts'
 import type { CurrentUserInfo } from '@/types/user.ts'
 import './index.css'
 
@@ -39,6 +39,7 @@ function Profile() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
   const [sendingCode, setSendingCode] = useState(false)
+  const [codeCountdown, setCodeCountdown] = useState(0)
   const [passwordForm] = Form.useForm<{ email: string; verifyCode: string; newPassword: string; confirmPassword: string }>()
 
   const loadProfile = useCallback(async () => {
@@ -58,6 +59,14 @@ function Profile() {
   useEffect(() => {
     void loadProfile()
   }, [loadProfile])
+
+  useEffect(() => {
+    if (codeCountdown <= 0) return
+    const timer = window.setTimeout(() => {
+      setCodeCountdown((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [codeCountdown])
 
   const roleNames = useMemo(() => profile?.roleName ?? [], [profile?.roleName])
   const roleCount = profile?.roleCount ?? roleNames.length
@@ -80,18 +89,23 @@ function Profile() {
   const handleCancelPasswordModal = () => {
     setPasswordModalOpen(false)
     passwordForm.resetFields()
+    setCodeCountdown(0)
   }
 
   const handleSendVerifyCode = async () => {
+    if (sendingCode || codeCountdown > 0) return
     try {
       const email = passwordForm.getFieldValue('email') || profile?.email
       if (!email) {
         message.warning('请先填写邮箱地址')
         return
       }
-
       setSendingCode(true)
-      message.info('邮箱验证码接口待接入')
+      await sendEmilaCode({ email })
+      message.success('验证码发送成功')
+      setCodeCountdown(60)
+    } catch {
+      message.error('验证码发送失败，请稍后重试')
     } finally {
       setSendingCode(false)
     }
@@ -107,9 +121,14 @@ function Profile() {
         return
       }
 
-      message.info('邮箱验证码修改密码接口待接入')
-      setPasswordModalOpen(false)
-      passwordForm.resetFields()
+
+      await editPassword(values).then(()=>{
+        setPasswordModalOpen(false)
+        passwordForm.resetFields()
+      }).finally(() => {
+        setCodeCountdown(0)
+      })
+
     } finally {
       setPasswordSubmitting(false)
     }
@@ -238,7 +257,7 @@ function Profile() {
               icon={<PhoneOutlined />}
               color="#f759ab"
               label="手机号"
-              value={profile?.phone}
+              value={profile?.phoneNumber}
             />
             <InfoItem
               icon={<CalendarOutlined />}
@@ -272,8 +291,8 @@ function Profile() {
               icon={<PhoneOutlined />}
               color="#f759ab"
               label="手机绑定"
-              desc={profile?.phone || '未绑定'}
-              status={profile?.phone ? 'set' : 'unset'}
+              desc={profile?.phoneNumber || '未绑定'}
+              status={profile?.phoneNumber ? 'set' : 'unset'}
             />
             <SecurityItem
               icon={<KeyOutlined />}
@@ -341,13 +360,14 @@ function Profile() {
           <Form.Item
             label="邮箱"
             name="email"
+
             initialValue={profile?.email || ''}
             rules={[
               { required: true, message: '请输入邮箱' },
               { type: 'email', message: '请输入正确的邮箱地址' },
             ]}
           >
-            <Input placeholder="请输入邮箱" />
+            <Input placeholder="请输入邮箱" disabled />
           </Form.Item>
           <Form.Item
             label="邮箱验证码"
@@ -359,10 +379,15 @@ function Profile() {
                 noStyle
                 rules={[{ required: true, message: '请输入邮箱验证码' }]}
               >
-                <Input style={{ width: 'calc(100% - 120px)' }} placeholder="请输入邮箱验证码" />
+                <Input style={{ width: 'calc(100% - 120px)' }}  placeholder="请输入邮箱验证码" />
               </Form.Item>
-              <Button style={{ width: 120 }} loading={sendingCode} onClick={() => void handleSendVerifyCode()}>
-                发送验证码
+              <Button
+                style={{ width: 120 }}
+                loading={sendingCode}
+                disabled={sendingCode || codeCountdown > 0}
+                onClick={() => void handleSendVerifyCode()}
+              >
+                {codeCountdown > 0 ? `${codeCountdown}s` : '发送验证码'}
               </Button>
             </Input.Group>
           </Form.Item>

@@ -30,3 +30,20 @@ export function updateUser(data: UserParams) {
 export function deleteUser(id: string) {
   return request.del<null>(`/users/${id}`)
 }
+/** 发送邮箱验证码 */
+export function sendEmilaCode(data: {
+  email: string;
+}) {
+  return request.post<null>('/users/sendEmilaCode', data)
+}
+
+/** 修改密码 */
+export function editPassword(data: {
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+  verifyCode: string;
+}) {
+  return request.post<null>('/users/editPassword', data)
+}
+

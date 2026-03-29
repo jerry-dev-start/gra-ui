@@ -4,6 +4,7 @@ import { Line, Column, Pie } from '@ant-design/charts'
 import { useThemeStore } from '@/stores/theme'
 import './index.css'
 import FileUpload from "@/components/Upload/FileUpload.tsx";
+import AvatarUploader from "@/components/AvatarUploader.tsx";
 
 /* ── 模拟数据 ── */
 
@@ -164,6 +165,10 @@ function Dashboard() {
 
         <Col xs={24} lg={10}>
           <FileUpload />
+        </Col>
+
+        <Col  xs={24} lg={10}>
+          <AvatarUploader />
         </Col>
       </Row>
 
