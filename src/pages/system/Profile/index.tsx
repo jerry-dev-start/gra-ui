@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Avatar, Button, Card, Form, Input, Modal, Spin, Tag, message, theme } from 'antd'
+import { Alert, Button, Card, Form, Input, Modal, Spin, Tag, message, theme } from 'antd'
 import {
   UserOutlined,
   MailOutlined,
@@ -17,6 +17,7 @@ import { useUserStore } from '@/stores/user.ts'
 import {editPassword, getCurrUserInfo, sendEmilaCode} from '@/api/user.ts'
 import type { CurrentUserInfo } from '@/types/user.ts'
 import './index.css'
+import AvatarUploader from "@/components/Upload/AvatarUploader.tsx";
 
 const roleTagColors = ['#00c2ff', '#7b61ff', '#36cfc9', '#f759ab', '#faad14']
 
@@ -164,19 +165,20 @@ function Profile() {
             style={{ '--avatar-border': t.colorBgContainer } as React.CSSProperties}
           >
             <div className="profile-avatar-wrapper">
-              <Avatar
-                size={96}
-                src={user?.avatar || undefined}
-                icon={!user?.avatar && <UserOutlined />}
-                style={{
-                  background: !user?.avatar
-                    ? 'linear-gradient(135deg, #00c2ff, #7b61ff)'
-                    : undefined,
-                  fontSize: 36,
-                }}
-              >
-                {!user?.avatar && (displayName.charAt(0) || '?')}
-              </Avatar>
+              {/*<Avatar*/}
+              {/*  size={96}*/}
+              {/*  src={import.meta.env.VITE_API_PRE + user?.avatar || undefined}*/}
+              {/*  icon={!user?.avatar && <UserOutlined />}*/}
+              {/*  style={{*/}
+              {/*    background: !user?.avatar*/}
+              {/*      ? 'linear-gradient(135deg, #00c2ff, #7b61ff)'*/}
+              {/*      : undefined,*/}
+              {/*    fontSize: 36,*/}
+              {/*  }}*/}
+              {/*>*/}
+              {/*  {!user?.avatar && (displayName.charAt(0) || '?')}*/}
+              {/*</Avatar>*/}
+              <AvatarUploader currentAvatar={user?.avatar || undefined}/>
             </div>
             <div className="profile-user-brief">
               <div className="profile-user-name" style={{ color: t.colorText }}>

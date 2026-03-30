@@ -47,3 +47,10 @@ export function editPassword(data: {
   return request.post<null>('/users/editPassword', data)
 }
 
+/** 更新用户头像 */
+export function updateUserAvatar(data: {
+  avatar: string;
+}) {
+  return request.post<null>('/users/updateUserAvatar', data)
+}
+

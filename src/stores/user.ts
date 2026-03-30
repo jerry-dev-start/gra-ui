@@ -3,6 +3,7 @@ import type { User } from '@/types/user'
 import { getUserInfo } from '@/api/auth'
 import { removeToken } from '@/utils/auth'
 
+
 interface UserState {
   user: User | null
   permissions: string[] | null
@@ -11,9 +12,11 @@ interface UserState {
   fetchUser: () => Promise<void>
   /** 清空用户信息（退出登录时调用） */
   clearUser: () => void
+
+  updateAvatar:(url: string) => Promise<void>
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set,get) => ({
   user: null,
   permissions: null,
   loading: false,
@@ -28,5 +31,16 @@ export const useUserStore = create<UserState>((set) => ({
       set({ user: null,permissions: null, loading: false })
     }
   },
+  updateAvatar: async (url: string)=>{
+    const currentUser = get().user;
+    // 确保这里的赋值能触发订阅者的更新
+    const userInfo:User = {
+      ...currentUser,
+      username: currentUser!.username,
+      avatar: url
+    }
+    set({user: userInfo})
+  },
   clearUser: () => set({ user: null,permissions: null }),
+
 }))

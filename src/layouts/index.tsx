@@ -157,7 +157,7 @@ function Layout() {
               title="个人中心"
             >
               {user?.avatar
-                ? <img src={user.avatar} alt="avatar" className="sidebar-user-avatar-img" />
+                ? <img src={import.meta.env.VITE_API_PRE + user.avatar} alt="avatar" className="sidebar-user-avatar-img" />
                 : (user?.nickname?.charAt(0) || user?.username?.charAt(0) || '?')
               }
             </div>
