@@ -24,6 +24,7 @@ steps:
   # 第二步：构建镜像并部署
   - name: local-deploy
     image: docker:latest
+    pull: if-not-exists  # 关键点：如果本地有就不下载
     volumes:
       - name: docker-sock
         path: /var/run/docker.sock
