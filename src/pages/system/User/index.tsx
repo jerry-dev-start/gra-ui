@@ -195,7 +195,7 @@ function UserPage() {
       align: 'center',
       render: (v: string, record) => (
         <Avatar
-          src={v || undefined}
+          src={import.meta.env.VITE_API_PRE +  v || undefined}
           icon={!v ? <UserOutlined /> : undefined}
           style={{ backgroundColor: v ? undefined : '#1677ff' }}
         >
