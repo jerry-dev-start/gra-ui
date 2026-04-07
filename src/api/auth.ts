@@ -4,7 +4,9 @@ import type { LoginParams, LoginResult, RefreshResult } from '../types/auth'
 
 /** 登录 */
 export function login(data: LoginParams) {
-  return request.post<LoginResult>('/auth/login', data)
+  return request.post<LoginResult>('/auth/login', data,{
+    noGlobalMessage:false
+  })
 }
 
 /** 使用 refreshToken 换取新的访问 Token */
