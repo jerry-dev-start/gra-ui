@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Card, Col, Form, Input, Popconfirm, Row, Select, Space, Table, Tag, message } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import {
+  Button, Card, Col, Form, Input, Popconfirm, Row, Select, Space, Table, Tag, message
+} from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import { createApi, deleteApi, getApiDetail, getApiManagerList, updateApi } from '@/api/apiManager'
+import {createApi, deleteApi, getApiDetail, getApiGroupNameList, getApiManagerList, updateApi} from '@/api/apiManager'
 import type { ApiManagerFormValues, ApiManagerPageResult, ApiManagerQuery, ApiManagerRecord, ApiMethod, ApiStatus } from '@/types/api'
 import ApiManagerModal from './components/ApiManagerModal'
 
@@ -27,6 +29,7 @@ const statusTagMap: Record<ApiStatus, { label: string; color: string }> = {
   2: { label: '禁用', color: 'red' },
 }
 
+
 function formatDateTime(value?: string) {
   if (!value) return '-'
 
@@ -45,9 +48,20 @@ function ApiManager() {
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
+  const [apiGroupNames, setApiGroupNames] = useState<{label: string, value: string}[]>([])
   const [editRecord, setEditRecord] = useState<ApiManagerRecord | null>(null)
   const [editLoadingId, setEditLoadingId] = useState<string>('')
   const [deleteLoadingId, setDeleteLoadingId] = useState<string>('')
+
+  const fetchGroupTree = async () => {
+    const groupName = await getApiGroupNameList()
+    // 假设 res 直接就是 ['研发部', '市场部']
+    const formattedOptions = groupName.map((name: string) => ({
+      label: name,
+      value: name,
+    }));
+    setApiGroupNames(formattedOptions)
+  }
 
   const fetchData = async (currentPage = page, currentPageSize = pageSize) => {
     setLoading(true)
@@ -72,8 +86,10 @@ function ApiManager() {
     }
   }
 
+
   useEffect(() => {
     fetchData()
+    fetchGroupTree()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = () => {
@@ -224,8 +240,8 @@ function ApiManager() {
   ], [deleteLoadingId, editLoadingId])
 
   return (
-    <>
-      <Card style={{ marginBottom: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
+      <Card style={{ marginBottom: 16}}>
         <Form form={form} layout="inline">
           <Row gutter={[16, 16]} style={{ width: '100%' }}>
             <Col>
@@ -243,11 +259,7 @@ function ApiManager() {
                 />
               </Form.Item>
             </Col>
-            <Col>
-              <Form.Item name="groupName" style={{ marginBottom: 0 }}>
-                <Input placeholder="接口分组" allowClear style={{ width: 180 }} />
-              </Form.Item>
-            </Col>
+
             <Col>
               <Form.Item name="status" style={{ marginBottom: 0 }}>
                 <Select
@@ -256,8 +268,18 @@ function ApiManager() {
                   style={{ width: 140 }}
                   options={[
                     { label: '启用', value: 1 },
-                    { label: '禁用', value: 0 },
+                    { label: '禁用', value: 2 },
                   ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="groupName" style={{ marginBottom: 0 }}>
+                <Select
+                    placeholder="分组名称"
+                    allowClear
+                    style={{ width: 140 }}
+                    options={apiGroupNames}
                 />
               </Form.Item>
             </Col>
@@ -275,32 +297,37 @@ function ApiManager() {
         </Form>
       </Card>
 
-      <Card
-        title="接口管理"
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            新增 API
-          </Button>
-        }
-      >
-        <Table<ApiManagerRecord>
-          rowKey="id"
-          columns={columns}
-          dataSource={dataSource}
-          loading={loading}
-          size="middle"
-          scroll={{ x: 1140 }}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (count) => `共 ${count} 条`,
-            onChange: handlePageChange,
-          }}
-        />
-      </Card>
+      <Row gutter={16} style={{ flex: 1, alignItems: 'flex-start', minHeight: 0 }}>
+        <Col style={{flex:1}}>
+          <Card
+              title="接口管理"
+              extra={
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                  新增 API
+                </Button>
+              }
+          >
+            <Table<ApiManagerRecord>
+                rowKey="id"
+                columns={columns}
+                dataSource={dataSource}
+                loading={loading}
+                size="middle"
+                scroll={{ x: 1140 }}
+                pagination={{
+                  current: page,
+                  pageSize,
+                  total,
+                  showSizeChanger: true,
+                  showQuickJumper: true,
+                  showTotal: (count) => `共 ${count} 条`,
+                  onChange: handlePageChange,
+                }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
 
       <ApiManagerModal
         open={modalOpen}
@@ -308,7 +335,7 @@ function ApiManager() {
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
       />
-    </>
+    </div>
   )
 }
 

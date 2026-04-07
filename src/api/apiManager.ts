@@ -13,6 +13,10 @@ export function getApiManagerList(params: ApiManagerQuery) {
   return request.get<ApiManagerPageResult>('/jkManager', params as unknown as Record<string, unknown>)
 }
 
+export function getApiGroupNameList() {
+  return request.get<string[]>('/jkManager/group')
+}
+
 /** 获取 API 详情 */
 export function getApiDetail(id: string) {
   return request.get<ApiManagerRecord>(`/jkManager/${id}`)

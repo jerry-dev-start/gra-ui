@@ -21,6 +21,7 @@ export interface ApiManagerRecord {
   desc?: string
   status: ApiStatus
   createdAt?: string
+  children?: ApiManagerRecord[]
 }
 
 /** API 权限树原始叶子节点 */
