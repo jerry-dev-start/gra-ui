@@ -416,16 +416,16 @@ function UserPage() {
                 <Input placeholder="请输入昵称" />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item label="头像" name="avatar">
-                <Input placeholder="头像地址" />
-              </Form.Item>
-            </Col>
+            {/*<Col span={12}>*/}
+            {/*  <Form.Item label="头像" name="avatar">*/}
+            {/*    <Input placeholder="头像地址" />*/}
+            {/*  </Form.Item>*/}
+            {/*</Col>*/}
             <Col span={12}>
               <Form.Item
                 label="邮箱"
                 name="email"
-                rules={[{ type: 'email', message: '邮箱格式不正确' }]}
+                rules={[{ type: 'email',required:true,message: '邮箱格式不正确' }]}
               >
                 <Input placeholder="请输入邮箱" />
               </Form.Item>
